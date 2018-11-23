@@ -38,12 +38,7 @@ def main(output_file):
     ri_std.append(np.std(ri_temps))
     death.append(np.average(death_temps))
 
-    # print corresponding index for specified death value
-#    for i, value in enumerate(death):
-#        if value > 55 and value < 56:
-#            print(i)
-
-    # call figure construction
+    # return data for figure construction
     return(ri_mean, ri_std, death)
 
 #--------------------------------------------------------------------------#
@@ -54,10 +49,14 @@ def figure(data1, data2):
     ri2 = data2[0]; ri_std2 = data2[1]; deathRate2 = data2[2]
 
     plt.figure(1)
-    plt.errorbar(deathRate1, ri1, ri_std1, color='blue', ecolor='lightsteelblue')
-    plt.errorbar(deathRate2, ri2, ri_std2, color='red', ecolor='lightcoral')
+    plt.errorbar(deathRate1, ri1, ri_std1, color='blue', ecolor='lightsteelblue', label="CD")
+    plt.errorbar(deathRate2, ri2, ri_std2, color='red', ecolor='lightcoral', label="CF & CD")
+
+    plt.legend(loc=2)
 
     plt.axhline(3, color='silver')
+    plt.axhline(1.8, color='silver', linestyle='--')
+    plt.ylim(1.5)
     plt.xlabel("death rate")
     plt.ylabel("regularity index")
     plt.title("cell death impact on RI")
@@ -70,6 +69,7 @@ if len(sys.argv)==3:
     data1 = main(sys.argv[1])
     data2 = main(sys.argv[2])
 
+    # figure construction
     figure(data1, data2)
 
     print("done")
