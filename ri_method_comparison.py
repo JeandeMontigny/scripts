@@ -44,11 +44,9 @@ def plot():
     tab_std = [std_fdm, std_md, std_fd, std_d]
     tab_death = [death_fdm, death_md, death_fd, death_d]
 
+    #---- figure ----#
     if not len(tab_mean) == len(tab_std) or not len(tab_mean) == len(tab_death):
         exit("error in raw data, all tab should be of same length")
-
-    fig=plt.figure()
-
     N=len(tab_mean)
     # bars x locations
     ind=np.arange(N) 
