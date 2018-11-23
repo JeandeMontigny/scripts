@@ -65,9 +65,9 @@ def plot():
     for x, y, p in zip(ind, tab_mean, p_values):
         if p < 0.05:
             plt.plot([x, x+1], [y+0.4, y+0.4], color='black')
-            if p < 0.01:
+            if p < 0.001:
                 plt.text((x+x+1)/2, y+0.45, "***", ha='center')
-            elif p < 0.001:
+            elif p < 0.01:
                 plt.text((x+x+1)/2, y+0.45, "**", ha='center')
             else:
                 plt.text((x+x+1)/2, y+0.45, "*", ha='center')
