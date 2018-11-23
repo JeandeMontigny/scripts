@@ -52,7 +52,11 @@ def figure(ri, ri_std, deathRate):
 
     plt.figure(1)
     plt.errorbar(deathRate, ri, ri_std, color='black', ecolor='gray')
+    # add horizontal line at RI = 3
     plt.axhline(3, color='silver')
+    # add horizontal line at RI = 1.8 (random)
+    plt.axhline(1.8, color='silver', linestyle='--')
+    plt.ylim(1.5)
     plt.xlabel("death rate")
     plt.ylabel("regularity index")
     plt.title("cell death impact on RI")
