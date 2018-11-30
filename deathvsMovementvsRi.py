@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 # parse output_file to construct tabs with average RI and death rate for each simulation parameter
 def main(output_file):
 
-    moveParam=0; deathParam=0; ri_temps=[]; death_temps=[]
+    moveParam=0; ri_temps=[]; death_temps=[]
     # main tabs
     ri_mean=[]; death=[]; move_param=[]
     fichier=open(output_file, "r")
@@ -38,11 +38,6 @@ def main(output_file):
     death.append(np.average(death_temps))
     move_param.append(float(m.group(1)))
 
-    # print corresponding index for specified death value
-#    for i, value in enumerate(death):
-#        if value > 79 and value < 80:
-#            print(i)
-
     # call figure construction
     figure(ri_mean, death, move_param)
 
@@ -51,7 +46,9 @@ def main(output_file):
 def figure(ri, deathRate, move_param):
 
     plt.figure(1)
+    # scatter plot with RI value as colour
     plt.scatter(deathRate, move_param, c=ri, marker='s', s=64)
+    # plot colour bar and legend
     plt.colorbar().set_label('Regularity index')
     plt.xlabel("Death rate")
     plt.ylabel("Movement threshold")
@@ -65,5 +62,5 @@ if len(sys.argv)==2:
     main(sys.argv[1])
     print("done")
 else:
-    exit("arg error - need 1 arg: [death_RI file]")
+    exit("arg error - need 1 arg: [death_movement_RI file]")
 
