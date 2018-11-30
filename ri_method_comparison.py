@@ -8,9 +8,11 @@ def plot():
 
     # FDM
     fdm = [6.48, 6.66, 6.64, 6.28, 6.18]
+    fdm = []
     mean_fdm = round(np.average(fdm), 2)
     std_fdm = round(np.std(fdm), 2)
     death_fdm = round(np.average([74.13, 74.36, 74.54, 75.06, 74.43]), 1)
+    death_fdm = round(np.average([]), 1)
 
     # DM
     dm = [6.02, 6.12, 5.83, 5.99, 6.00]
@@ -63,12 +65,13 @@ def plot():
     for x, y, p in zip(ind, tab_mean, p_values):
         if p < 0.05:
             plt.plot([x, x+1], [y+0.4, y+0.4], color='black')
+            star_x = (x+x+1)/2; star_y = y+0.45
             if p < 0.001:
-                plt.text((x+x+1)/2, y+0.45, "***", ha='center')
+                plt.text(star_x, star_y, "***", ha='center')
             elif p < 0.01:
-                plt.text((x+x+1)/2, y+0.45, "**", ha='center')
+                plt.text(star_x, star_y, "**", ha='center')
             else:
-                plt.text((x+x+1)/2, y+0.45, "*", ha='center')
+                plt.text(star_x, star_y, "*", ha='center')
 
     # x and y legend
     plt.xticks(ind, ('F-D-M', 'D-M', 'F-D', 'D'))
