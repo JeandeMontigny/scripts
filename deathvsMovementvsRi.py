@@ -50,6 +50,10 @@ def figure(ri, deathRate, move_param):
     plt.scatter(deathRate, move_param, c=ri, marker='s', s=64)
     # plot colour bar and legend
     plt.colorbar().set_label('Regularity index')
+    # vertical line for good death rate
+    plt.axvline(x=60, color='silver', linestyle='--')
+    plt.axvline(x=80, color='silver', linestyle='--')
+    # legend
     plt.xlabel("Death rate")
     plt.ylabel("Movement threshold")
     plt.title("Cell death and cell migration impact on RI")
