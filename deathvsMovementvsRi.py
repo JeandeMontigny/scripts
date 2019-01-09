@@ -47,7 +47,7 @@ def figure(ri, deathRate, move_param):
 
     plt.figure(1)
     # scatter plot with RI value as colour
-    plt.scatter(deathRate, move_param, c=ri, marker='s', s=64)
+    plt.scatter(deathRate, move_param, c=ri, marker='s', edgecolors='none', s=64)
     # plot colour bar and legend
     plt.colorbar().set_label('Regularity index')
     # vertical line for good death rate
