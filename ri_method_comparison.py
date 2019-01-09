@@ -5,20 +5,17 @@ import matplotlib.pyplot as plt
 
 #--------------------------------------------------------------------------#
 def plot():
-
-    # FDM
-    fdm = [6.48, 6.66, 6.64, 6.28, 6.18]
-    fdm = []
+    # FDM - movement = 1.21; death = 1.216
+    fdm = [6.07, 6.08, 7.28, 5.81, 6.03, 6.63, 6.26, 5.87, 6.58, 6.30]
     mean_fdm = round(np.average(fdm), 2)
     std_fdm = round(np.std(fdm), 2)
-    death_fdm = round(np.average([74.13, 74.36, 74.54, 75.06, 74.43]), 1)
-    death_fdm = round(np.average([]), 1)
+    death_fdm = round(np.average([72.5, 71.7, 70.1, 71.2, 70.8, 70.9, 71.5, 71.5, 71.1, 70.3]), 1)
 
-    # DM
-    dm = [6.02, 6.12, 5.83, 5.99, 6.00]
+    # DM - movement = 1.21; death = 1.216
+    dm = [6.76, 5.83, 5.93, 6.27, 5.96, 6.00, 6.40, 5.92, 5.99, 5.86]
     mean_md = round(np.average(dm), 2)
     std_md = round(np.std(dm), 2)
-    death_md = round(np.average([76.56, 75.20, 76.45, 74.93, 76.77]), 1)
+    death_md = round(np.average([73.6, 74.5, 74.8, 74.7, 74.5, 74.2, 74.6, 73.9, 74.7, 73.7]), 1)
 
     # FD
     fd = [3.28, 3.24, 3.26, 3.19, 3.12]
