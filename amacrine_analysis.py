@@ -6,22 +6,10 @@ import numpy as np
 def main(folder):
     # extract info from folder files
     folder_data = getFolderData(folder)
-    files_couple = []
     # create relevant pairs of GCL/INL files
-    for data1 in folder_data:
-        for data2 in folder_data:
-            if (data1[1] == data2[1]) and (data1[2] != data2[2]):
-                if data1[2] == 'GCL':
-                    files_couple.append([data1[3], data2[3]])
-                else:
-                    files_couple.append([data2[3], data1[3]])
-                folder_data.remove(data2)
-                break
-
+    files_couple = createPairs(folder_data)
     # process each GCL/INL pair
-    results = []
-    for couple in files_couple:
-        results.append(processCouple(folder+"/"+couple[0], folder+"/"+couple[1]))
+    results = analyse(files_couple, folder)
 
     # compute means and std
     tab_gcl_ri=[]; tab_inl_ri=[]; tab_gcl_inl_ratio=[]; tab_both_ri=[]; tab_exclusionFactor=[]
@@ -33,6 +21,13 @@ def main(folder):
     print("gcl/inl ratio:", np.average(tab_gcl_inl_ratio), np.std(tab_gcl_inl_ratio))
     print("both ri:", np.average(tab_both_ri), np.std(tab_both_ri))
     print("exclusion factor:", np.average(tab_exclusionFactor), np.std(tab_exclusionFactor))
+
+#--------------------------------------------------------------------------#
+def analyse(files_couple, folder):
+    results = []
+    for couple in files_couple:
+        results.append(processCouple(folder+"/"+couple[0], folder+"/"+couple[1]))
+    return results
 
 #--------------------------------------------------------------------------#
 def processCouple(gcl_coord_file, inl_coord_file):
@@ -100,6 +95,19 @@ def getShortestDistList(coord_list):
         shortest_dist_list.append(shortestDist)
     return shortest_dist_list
 
+#--------------------------------------------------------------------------#
+def createPairs(folder_data):
+    files_couple = []
+    for data1 in folder_data:
+        for data2 in folder_data:
+            if (data1[1] == data2[1]) and (data1[2] != data2[2]):
+                if data1[2] == 'GCL':
+                    files_couple.append([data1[3], data2[3]])
+                else:
+                    files_couple.append([data2[3], data1[3]])
+                folder_data.remove(data2)
+                break
+    return files_couple
 #--------------------------------------------------------------------------#
 def getFolderData(folder):
     folder_data = []
