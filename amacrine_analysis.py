@@ -84,15 +84,16 @@ def getCellsPosition(coord_file):
 def getShortestDistList(coord_list):
     shortest_dist_list = []
     for i in range(0, len(coord_list)):
-        shortestDist = 100000
+        distance_list = []
         cell_coord = coord_list[i]
         for j in range(0, len(coord_list)):
             other_cell_coord = coord_list[j]
             tempsDistance = np.sqrt(np.square(cell_coord[0] - other_cell_coord[0]) + np.square(cell_coord[1] - other_cell_coord[1]))
-            # if cell is not itself and is closer
-            if tempsDistance != 0 and tempsDistance < shortestDist:
-                shortestDist = tempsDistance
-        shortest_dist_list.append(shortestDist)
+            # if cell is not itself
+            if tempsDistance != 0:
+                distance_list.append(tempsDistance)
+        # add shortest distance
+        shortest_dist_list.append(min(distance_list))
     return shortest_dist_list
 
 #--------------------------------------------------------------------------#
