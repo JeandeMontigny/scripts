@@ -13,13 +13,11 @@ def main(folder, output_path):
     output_SAC_INL=open(output_path+"ri_measures_output_SAC_INL.out", "a")
     # tab for figures
     figures_tab=[]
+    # tab for exclusion factor figure
+    exclusion_tab=[]
     # prepare progression bar
-    nb_of_files=0
+    nb_of_files=getNbOfFiles(folder)
     current_file_nb=0
-    for dirpath, dirnames, filenames in os.walk(folder):
-        for name in filenames:
-            if name.endswith(".txt"):
-                nb_of_files+=1
     # walk across folders
     for dirpath, dirnames, filenames in os.walk(folder):
         # for each files in directory
@@ -30,13 +28,16 @@ def main(folder, output_path):
                 current_file_nb+=1
                 printProgressBar(current_file_nb, nb_of_files)
                 # call read function to get the number of cells and ri value for this file
-                values = read(dirpath+"/"+name)
+                values = read(dirpath, name)
                 nb_of_cells = values[0]
                 ri = values[1]
                 # create string for output - format: dev_day, nb_of_cells, ri
                 m=re.search(r'.+/P([0-9]+)', dirpath, re.M|re.I)
                 string_output=str(m.group(1))+" "+str(nb_of_cells)+" "+str(ri)+"\n"
                 tab_cell = [m.group(1), nb_of_cells, ri]
+                if len(values)==3:
+                    exclusion = values[2]
+                    exclusion_tab.append([int(m.group(1)), float(exclusion)])
                 # write output into corresponding output file
                 if name.endswith("RGC.txt"):
                     tab_cell.append("RGC"); figures_tab.append(tab_cell)
@@ -51,15 +52,27 @@ def main(folder, output_path):
     # close output files
     output_RGC.close(); output_SAC_GCL.close(); output_SAC_INL.close()
 
+    figureExclusion(exclusion_tab)
     figures(figures_tab)
 
 #--------------------------------------------------------------------------#
-def read(coord_file):
+def getNbOfFiles(folder):
+    nb_of_files=0
+    for dirpath, dirnames, filenames in os.walk(folder):
+        for name in filenames:
+            if name.endswith(".txt"):
+                nb_of_files+=1
+
+    return nb_of_files
+
+#--------------------------------------------------------------------------#
+def read(folder, name):
     """Return number of cells and rounded RI value.
     To do that, extract x,y coordinate from ImageJ cell position extraction then compute the Regularity Index (RI) corresponding to this cell population.
     Argument: file containing X,Y coordinates of every cells, sorted as 'index Area Mean Min Max X Y' """
     cells_position=[]
     nb_of_cells=0
+    coord_file=folder+"/"+name
     fichier=open(coord_file, "r")
     file_lines=fichier.readlines()
     # first, extract X Y position for each cell
@@ -80,6 +93,14 @@ def read(coord_file):
     shortest_dist_list=getShortestDistList(cells_position)
     # calculate ri, which is: mean of distances / std of distances
     ri = np.average(shortest_dist_list)/np.std(shortest_dist_list)
+    # if file is gcl amacrine cells, we have to process the pair GCL/INL
+    if name.endswith("GCL.txt"):
+        # get corresponding inl pair cells position
+        inl_cells_position = getCellsPosition(getPair(folder, name))
+        # get GCL/INL pair exclusion factor
+        exclusion_factor = getExclusionFactor(cells_position, inl_cells_position)
+
+        return nb_of_cells, round(ri, 2), exclusion_factor
 
     return nb_of_cells, round(ri, 2)
 
@@ -104,6 +125,41 @@ def getShortestDistList(coord_list):
         shortest_dist_list.append(min(distance_list))
 
     return shortest_dist_list
+
+#--------------------------------------------------------------------------#
+def getPair(folder_data, name):
+    files_couple = []
+    pair_name = name[:len(name)-7]+"INL.txt"
+    for file_name in os.listdir(folder_data):
+        if file_name == pair_name:
+            return folder_data+"/"+file_name
+
+#--------------------------------------------------------------------------#
+def getCellsPosition(coord_file):
+    cells_position=[]
+    fichier=open(coord_file, "r")
+    file_lines=fichier.readlines()
+    for line in file_lines:
+        # ...,x,y
+        m=re.search( r'[0-9.]+\t[0-9.]+\t[0-9.]+\t[0-9.]+\t[0-9.]+\t([0-9.]+)\t([0-9.]+)', line, re.M|re.I)
+        if m :
+            cells_position.append([round(float(m.group(1)), 2), round(float(m.group(2)), 2)])
+
+    return cells_position
+
+#--------------------------------------------------------------------------#
+def getExclusionFactor(tab_1, tab_2):
+    """ return a double between [0,1]: 1 if mosaics completely excluse one each other, 0 if they are totaly superimposed """
+    redondancy = 0
+    r = 10
+    for cell_1 in tab_1:
+        for cell_2 in tab_2:
+            if (np.square(cell_1[0] - cell_2[0]) + np.square(cell_1[1] - cell_2[1]) <= np.square(r)):
+                redondancy+=1
+                # exit loop to avoid multiple positif for one cell
+                break
+
+    return round(1 - redondancy/len(tab_1+tab_2)*2, 2)
 
 #--------------------------------------------------------------------------#
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 0, length = 100, fill = "#"):
@@ -203,6 +259,7 @@ def sortData(temps_dict):
             sac_inl_nb.append(0); sac_inl_nb_std.append(0)
             sac_inl_ri.append(0); sac_inl_ri_std.append(0)
 
+    # TODO: create function for sorting
     # insertion sort: set correct order for direct figure creation
     for i in range(1, len(dev_days)):
         day_temp=dev_days[i]
@@ -234,6 +291,50 @@ def createFigure(x, y, std, x_label, y_label, title):
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     plt.title(title)
+
+#--------------------------------------------------------------------------#
+def figureExclusion(tab):
+
+    data=insertionSort(getFigureExclusionTab(tab))
+    dev_days=data[0]; score=data[1]; score_std=data[2]
+
+    createFigure(dev_days, score, score_std, "Postnatal day", "Exclusion score", "Exclusion score of GCL and INL mosaics during development")
+
+#--------------------------------------------------------------------------#
+def getFigureExclusionTab(tab):
+    dev_days=[]; score=[]; score_std=[]
+    temps=[]
+    for cell in tab:
+        if not cell[0] in dev_days:
+            dev_days.append(cell[0])
+            if not len(temps)==0:
+                score.append(np.average(temps))
+                score_std.append(np.std(temps))
+            temps=[]
+            temps.append(cell[1])
+        else:
+            temps.append(cell[1])
+    score.append(np.average(temps))
+    score_std.append(np.std(temps))
+
+    return dev_days, score, score_std
+
+#--------------------------------------------------------------------------#
+# TODO: create generic function for sorting
+def insertionSort(data):
+    dev_days=data[0]; score=data[1]; score_std=data[2]
+    # insertion sort: set correct order for direct figure creation
+    for i in range(1, len(dev_days)):
+        day_temp=dev_days[i]; score_temps=score[i]; score_std_temps=score_std[i]
+        j=i-1
+        # search index from 0 to i-1 where to insert value[i]=temp
+        while j>=0 and dev_days[j]>day_temp:
+            dev_days[j+1]=dev_days[j]; score[j+1]=score[j]; score_std[j+1]=score_std[j]
+            j-=1
+        # insert value[i] to its position
+        dev_days[j+1]=day_temp; score[j+1]=score_temps; score_std[j+1]=score_std_temps
+
+    return dev_days, score, score_std
 
 #--------------------------------------------------------------------------#
 if len(sys.argv)!=3:
