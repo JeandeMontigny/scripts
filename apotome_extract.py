@@ -329,6 +329,7 @@ def createFigure(x, y, std, x_label, y_label, title):
     plt.figure()
 
     plt.errorbar(x, y, std)
+    plt.xlim(1.5, 10.5)
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     plt.title(title)
