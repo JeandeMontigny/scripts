@@ -33,11 +33,12 @@ def main(folder, output_path):
                 # call read function to get the number of cells and ri value for this file
                 values = read(dirpath, name)
                 nb_of_cells = values[0]
+                density = (nb_of_cells / (335.4*335.4)) * 10e5
                 ri = values[1]
                 # create string for output - format: dev_day, nb_of_cells, ri
                 m = re.search(r'.+/P([0-9]+)', dirpath, re.M|re.I)
-                string_output = str(m.group(1))+" "+str(nb_of_cells)+" "+str(ri)+"\n"
-                tab_cell = [m.group(1), nb_of_cells, ri]
+                string_output = str(m.group(1))+" "+str(density)+" "+str(ri)+"\n"
+                tab_cell = [m.group(1), density, ri]
                 if len(values) == 3:
                     exclusion = values[2]
                     exclusion_tab.append([int(m.group(1)), float(exclusion)])
