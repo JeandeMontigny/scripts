@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys, os, re
 import numpy as np
+import matplotlib.pyplot as plt
 
 #--------------------------------------------------------------------------#
 def main(folder):
@@ -11,14 +12,13 @@ def main(folder):
             temps_branching.append(results[0])
             temps_length.append(results[1])
 
-    print(np.average(temps_branching), np.std(temps_branching))
-    print(np.average(temps_length), np.std(temps_length))
+    plot(np.average(temps_branching), np.std(temps_branching), np.average(temps_length), np.std(temps_length))
 
 #--------------------------------------------------------------------------#
 def read(file_name):
     swc_file = open(file_name, "r")
 
-    point_coord = [0, 0, 0]; previous_point_coord = [0, 0, 0]; previous_branching_point_coord = [0, 0, 0]
+    previous_point_coord = [0, 0, 0]; previous_branching_point_coord = [0, 0, 0]
     branching_nb = 0; length = 0
 
     for line in swc_file:
@@ -32,7 +32,7 @@ def read(file_name):
                 previous_point_coord = point_coord
 
             # if the point is a segment, branching point or a terminal point
-            if int(m.group(2)) == 3 or int(m.group(2)) == 5 or int(m.group(2)) == 6:
+            if int(m.group(2)) == 3 or int(m.group(2)) == 4 or int(m.group(2)) == 5 or int(m.group(2)) == 6:
                 # add this segment length to total length
                 length += dist(point_coord, previous_point_coord)
                 previous_point_coord = point_coord
@@ -51,6 +51,20 @@ def read(file_name):
 #--------------------------------------------------------------------------#
 def dist(current, previous):
     return round(np.sqrt(np.square(current[0]-previous[0])+np.square(current[1]-previous[1])+np.square(current[2]-previous[2])), 3)
+#--------------------------------------------------------------------------#
+def plot(branching_ave, branching_std, length_ave, length_std):
+    figure([branching_ave, branching_std], [9.8, 4.6], "Average number of branching points")
+    figure([branching_ave, branching_std], [5942.8, 1590.4], "Average length of dendritic tree")
+    
+    plt.show()
+
+#--------------------------------------------------------------------------#
+def figure(simu, real, title):
+    plt.figure()
+    y_pos = np.arange(2)
+    plt.bar(y_pos, [simu[0], real[0]], 0.75, color=['dimgrey', 'darkgray'], yerr=[simu[1], real[1]], error_kw=dict(ecolor='black'), align='center')
+    plt.xticks(y_pos, ["simulated neurons", "real neurons"])
+    plt.title(title)
 
 #--------------------------------------------------------------------------#
 if len(sys.argv) != 3:
