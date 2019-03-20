@@ -4,9 +4,15 @@ import numpy as np
 
 #--------------------------------------------------------------------------#
 def main(folder):
+    temps_branching = []; temps_length = []
     for name in os.listdir(folder):
         if name.endswith(".swc"):
-            print(read(folder+"/"+name))
+            results = read(folder+"/"+name)
+            temps_branching.append(results[0])
+            temps_length.append(results[1])
+
+    print(np.average(temps_branching), np.std(temps_branching))
+    print(np.average(temps_length), np.std(temps_length))
 
 #--------------------------------------------------------------------------#
 def read(file_name):
