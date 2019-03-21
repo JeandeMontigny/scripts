@@ -12,7 +12,11 @@ def main(folder):
             temps_branching.append(results[0])
             temps_length.append(results[1])
 
-    plot(np.average(temps_branching), np.std(temps_branching), np.average(temps_length), np.std(temps_length))
+    branching_ave = round(np.average(temps_branching), 2); branching_std = round(np.std(temps_branching), 2)
+    length_ave = round(np.average(temps_length), 2); length_std = round(np.std(temps_length), 2)
+    print("average of", branching_ave, "branching point, with std of", branching_std, "\naverage dendritic length of", length_ave, " with std of", length_std)
+
+    plot(branching_ave, branching_std, length_ave, length_std)
 
 #--------------------------------------------------------------------------#
 def read(file_name):
@@ -51,11 +55,12 @@ def read(file_name):
 #--------------------------------------------------------------------------#
 def dist(current, previous):
     return round(np.sqrt(np.square(current[0]-previous[0])+np.square(current[1]-previous[1])+np.square(current[2]-previous[2])), 3)
+
 #--------------------------------------------------------------------------#
 def plot(branching_ave, branching_std, length_ave, length_std):
-    figure([branching_ave, branching_std], [9.8, 4.6], "Average number of branching points")
-    figure([branching_ave, branching_std], [5942.8, 1590.4], "Average length of dendritic tree")
-    
+    figure([branching_ave, branching_std], [37.19, 10.04], "Average number of branching points")
+    figure([length_ave, length_std], [5942.89, 1590.46], "Average length of dendritic tree")
+
     plt.show()
 
 #--------------------------------------------------------------------------#
