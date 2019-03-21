@@ -9,7 +9,7 @@ def main(path_dir):
     if not os.path.isdir("./rewrite"):
         os.mkdir("./rewrite")
     print("correcting files..")
-    number_of_file = len([name for name in os.listdir('.') if os.path.isfile(name)])
+    number_of_file = len([name for name in os.listdir('.') if os.path.isfile(name) and name.endswith(".swc")])
     nb_file = 0
     for file in os.listdir("./"):
         if file.endswith(".swc"):
@@ -20,7 +20,7 @@ def main(path_dir):
             
             lecture(file)
 
-    print("done")
+    print("\ndone")
 #--------------------------------------------------------------------------#
 def lecture(file_name):
     fichier=open("./"+file_name, "r")
@@ -31,11 +31,12 @@ def lecture(file_name):
         m = re.search( r' ?([0-9]+) [0-9]+ .+ .+ .+ .+ ([-0-9]+).?', line, re.M|re.I)
         # if line is not a comment or empty
         if m and (line[0]!="#" or line[0]!="\n"):
+            parent=int(m.group(2))
             # if the parent of this point is a branching point
-            if (int(m.group(2))<prev_parent) and (int(m.group(2))>1):
-                branching_index.append(int(m.group(2)))
+            if parent>1 and parent<prev_parent and not parent in branching_index:
+                branching_index.append(parent)
                 terminasion_index.append(prev_id)
-            prev_parent=int(m.group(2))
+            prev_parent=parent
             prev_id=int(m.group(1))
         elif line[0]=="#" or line[0]=="\n":
             line_non_cell+=1
@@ -52,7 +53,7 @@ def write(file_name, branching_index, terminasion_index):
     for  line in file_lines:
         m = re.search( r' ?([0-9]+) ([0-9]+) (.+) (.+) (.+) (.+) ([-0-9]+).?', line, re.M|re.I)
         if m and (line[0]!="#" or line[0]!="\n"):
-            if int(m.group(1)) in branching_index and int(m.group(2))==3:
+            if int(m.group(1)) in branching_index and (int(m.group(2))==3 or int(m.group(2))==4):
                 output.write(m.group(1)+" 5 "+m.group(3)+" "+m.group(4)+" "+m.group(5)+" "+m.group(6)+" "+m.group(7)+"\n")
             elif int(m.group(1)) in terminasion_index and int(m.group(2))==3:
                 output.write(m.group(1)+" 6 "+m.group(3)+" "+m.group(4)+" "+m.group(5)+" "+m.group(6)+" "+m.group(7)+"\n")
