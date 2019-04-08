@@ -216,6 +216,8 @@ def figures(figures_tab):
     # RGC figure
     createFigure(dev_days, rgc_nb, rgc_nb_std, "Postnatal day", "Cell density", "RGC density during development")
     createFigure(dev_days, rgc_ri, rgc_ri_std, "Postnatal day", "RI", "RGC Regularity Index during development")
+    createFigureRiEvolution(rgc_nb, rgc_ri)
+
     # SAC GCL figure
     createFigure(dev_days, sac_gcl_nb, sac_gcl_nb_std, "Postnatal day", "Cell density", "GCL SAC density during development")
     createFigure(dev_days, sac_gcl_ri, sac_gcl_ri_std, "Postnatal day", "RI", "GCL SAC Regularity Index during development")
@@ -334,6 +336,20 @@ def createFigure(x, y, std, x_label, y_label, title):
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     plt.title(title)
+
+#--------------------------------------------------------------------------#
+def createFigureRiEvolution(rgc_nb, rgc_ri):
+    """ Create figure of ri evolution vs death rate """
+    ri_diff = []; death_rate = []
+    for i in range(1, len(rgc_nb)-4):
+        death_rate.append( (12000 - rgc_nb[i])/12000*100 )
+        ri_diff.append(rgc_ri[i]-rgc_ri[i-1])
+
+    plt.figure()
+    plt.plot(death_rate, ri_diff)
+    plt.axhline(y=0, color='gray', linestyle='--')
+    plt.xlabel("death rate")
+    plt.ylabel("RI evolution")
 
 #--------------------------------------------------------------------------#
 def figureExclusion(tab):
