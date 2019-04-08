@@ -2,6 +2,7 @@
 import sys, os, re, numpy
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.signal as sig
 
 #--------------------------------------------------------------------------#
 def main(folder):
@@ -87,6 +88,8 @@ def figureRiVsDeath(mean_ri, mean_death):
 
     for i in range(10, 72):
         diff_ri.append(mean_ri[i]-mean_ri[i-1])
+    # smooth curve
+    diff_ri = sig.savgol_filter(diff_ri, 7, 3)
 
     plt.figure()
     plt.plot(mean_death[10:72], diff_ri, color='black')
