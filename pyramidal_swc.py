@@ -4,7 +4,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #--------------------------------------------------------------------------#
-def main(folder):
+def main(folder1, folder2):
+    simulated = extract(folder1)
+    defelipe = extract(folder2)
+
+    plot(simulated, defelipe)
+
+#--------------------------------------------------------------------------#
+def extract(folder):
     temps_branching = []; temps_length = []
     for name in os.listdir(folder):
         if name.endswith(".swc"):
@@ -16,7 +23,7 @@ def main(folder):
     length_ave = round(np.average(temps_length), 2); length_std = round(np.std(temps_length), 2)
     print("average of", branching_ave, "branching point, with std of", branching_std, "\naverage dendritic length of", length_ave, " with std of", length_std)
 
-    plot(branching_ave, branching_std, length_ave, length_std)
+    return branching_ave, branching_std, length_ave, length_std
 
 #--------------------------------------------------------------------------#
 def read(file_name):
@@ -57,9 +64,9 @@ def dist(current, previous):
     return round(np.sqrt(np.square(current[0]-previous[0])+np.square(current[1]-previous[1])+np.square(current[2]-previous[2])), 3)
 
 #--------------------------------------------------------------------------#
-def plot(branching_ave, branching_std, length_ave, length_std):
-    figure([branching_ave, branching_std], [37.19, 10.04], "Average number of branching points")
-    figure([length_ave, length_std], [5942.89, 1590.46], "Average length of dendritic tree")
+def plot(simulated, defilipe):
+    figure([simulated[0], simulated[1]], [defilipe[0], defilipe[1]], "Average number of branching points")
+    figure([simulated[2], simulated[3]], [defilipe[2], defilipe[3]], "Average length of dendritic tree")
 
     plt.show()
 
@@ -72,14 +79,15 @@ def figure(simu, real, title):
     plt.title(title)
 
 #--------------------------------------------------------------------------#
-if len(sys.argv) != 3:
-    exit("arg error - need 2 arg: [folder swc files] [rewrite,-]")
+if len(sys.argv) != 4:
+    exit("arg error - need 2 arg: [simulated swc folder] [defilipe swc folder] [rewrite,-]")
 else:
-    if sys.argv[2]=="rewrite":
+    if sys.argv[3]=="rewrite":
         import correction
         correction.main(sys.argv[1])
         arg=sys.argv[1]+"/rewrite"
-        main(arg)
+        main(arg, sys.argv[2])
     else:
-        main(sys.argv[1])
+        main(sys.argv[1], sys.argv[2])
     print("done")
+
