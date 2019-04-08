@@ -11,7 +11,6 @@ def main(folder):
             results = read(folder+"/"+name)
             ri_mean.append(results[0])
             death_rate.append(results[1])
-
 #            plotSimu(results[0], name); plt.show()
 
     simu_nb = len(ri_mean); simu_len = len(ri_mean[0])
@@ -22,7 +21,7 @@ def main(folder):
 
     x_axis = []
     mean_ri_mean = []; mean_ri_std = []
-    mean_death_rate = []; std_death_rate = []
+    mean_death_rate = []; mean_cell_density = []; std_death_rate = []
     for i in range(0, simu_len):
         x_axis.append(i)
 
@@ -35,13 +34,13 @@ def main(folder):
         mean_ri_mean.append( round(np.average(mean_ri_mean_temps), 3) )
         mean_ri_std.append( round(np.std(mean_ri_mean_temps), 3) )
 
-#        mean_death_rate.append( 12000 - (12000 * round(np.average(mean_death_rate_temps), 3) /100 )  )
+        mean_cell_density.append( 12000 - (12000 * round(np.average(mean_death_rate_temps), 3) /100 )  )
         mean_death_rate.append( round(np.average(mean_death_rate_temps), 3) )
         std_death_rate.append( round(np.std(mean_death_rate_temps), 3) )
 
-#    figure(x_axis, mean_ri_mean, mean_ri_std, "regularity index")
-#    figure(x_axis, mean_death_rate, std_death_rate, "death rate")
-#    figure(x_axis, mean_death_rate, std_death_rate, "cell density")
+    figure(x_axis, mean_ri_mean, mean_ri_std, "regularity index")
+    figure(x_axis, mean_death_rate, std_death_rate, "death rate")
+    figure(x_axis, mean_cell_density, std_death_rate, "cell density")
 
     figureRiVsDeath(mean_ri_mean, mean_death_rate)
 
