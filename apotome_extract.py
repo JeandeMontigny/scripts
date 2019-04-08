@@ -341,12 +341,13 @@ def createFigure(x, y, std, x_label, y_label, title):
 def createFigureRiEvolution(rgc_nb, rgc_ri):
     """ Create figure of ri evolution vs death rate """
     ri_diff = []; death_rate = []
-    for i in range(1, len(rgc_nb)-4):
+    for i in range(0, len(rgc_nb)-4):
         death_rate.append( (12000 - rgc_nb[i])/12000*100 )
-        ri_diff.append(rgc_ri[i]-rgc_ri[i-1])
+        if i > 0:
+            ri_diff.append(rgc_ri[i]-rgc_ri[i-1])
 
     plt.figure()
-    plt.plot(death_rate, ri_diff)
+    plt.plot(death_rate[0:len(death_rate)-1], ri_diff)
     plt.axhline(y=0, color='gray', linestyle='--')
     plt.xlabel("death rate")
     plt.ylabel("RI evolution")
