@@ -44,7 +44,6 @@ def processCouple(gcl_coord_file, inl_coord_file):
     both_ri = getRi(getShortestDistList(mergeTab(gcl_cells_position, inl_cells_position)))
     # exclusion
     exclusionFactor = getExclusionFactor(gcl_cells_position, inl_cells_position)
-
     return [gcl_ri, inl_ri, gcl_inl_ratio, both_ri, exclusionFactor]
 
 #--------------------------------------------------------------------------#
@@ -109,6 +108,7 @@ def createPairs(folder_data):
                 folder_data.remove(data2)
                 break
     return files_couple
+
 #--------------------------------------------------------------------------#
 def getFolderData(folder):
     folder_data = []
