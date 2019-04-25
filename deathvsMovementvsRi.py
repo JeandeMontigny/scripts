@@ -14,8 +14,8 @@ def main(output_file):
     file_lines=fichier.readlines()
     for  line in file_lines:
         # regular expression for line parsing
-        # info order: movementParam deathParam ri0 ri1 ri2 cellDensity cellDeath migrationDistance
-        m=re.search( r'(.+) (.+) (.+) (.+) (.+) (.+) (.+) (.+)', line, re.M|re.I)
+        # info order: movementParam deathParam ri0 ri1 ri2 cellDensity cellDeath migrationDistance migrationDistanceStd
+        m=re.search( r'(.+) (.+) (.+) (.+) (.+) (.+) (.+) (.+) .+', line, re.M|re.I)
         if m:
             # if simulation parameter for this result is not the same as before
             if (float(m.group(1)) != moveParam):
