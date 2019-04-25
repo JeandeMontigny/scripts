@@ -299,7 +299,7 @@ def copy_by_type(cell_type, file_name):
 
 #--------------------------------------------------------------------------#
 def plot(nb_b, std_nb_b, iso, std_iso, dist_branch, std_dist_branch, dist_terminal, dist_terminal_std, list_isometrie):
-    print "\nconstruction of figures.."
+    print "\nfigures construction.."
 
     # ---- classique bar chart ---- #
     figure([0.307], [0.192], [iso], [std_iso], 'score', 'score of anisometry', 1, "y")
@@ -328,7 +328,7 @@ def plot(nb_b, std_nb_b, iso, std_iso, dist_branch, std_dist_branch, dist_termin
     plt.plot(interval, tab_mean);
 
     # ---- show every plots ---- #
-    print "construction done"
+    print "done"
     plt.show()
 
 #--------------------------------------------------------------------------#
