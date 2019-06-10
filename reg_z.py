@@ -196,6 +196,8 @@ def iso_distributor(x, y):
 #--------------------------------------------------------------------------#
 def isometry(tab):
     theo_val=float(len(tab)/8)
+    if len(tab)<2 or theo_val==0:
+        return 0
     return round(((abs(tab.count(1)-theo_val)/theo_val)+(abs(tab.count(2)-theo_val)/theo_val)+(abs(tab.count(3)-theo_val)/theo_val)+(abs(tab.count(4)-theo_val)/theo_val)+(abs(tab.count(5)-theo_val)/theo_val)+(abs(tab.count(6)-theo_val)/theo_val)+(abs(tab.count(7)-theo_val)/theo_val)+(abs(tab.count(8)-theo_val)/theo_val))/14, 3)
 
 #--------------------------------------------------------------------------#
