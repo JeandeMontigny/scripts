@@ -36,14 +36,11 @@ def main(output_file):
     ri_std.append(np.std(ri_temps))
     density_list.append(m.group(1))
 
-    # print corresponding index for specified death value
-#    for i, value in enumerate(death):
-#        if value > 79 and value < 80:
-#            print(i)
-
     # call figure construction
     figure(density_list, ri_mean, ri_std)
 
+    return 1
+    
 #--------------------------------------------------------------------------#
 # simple plot of death vs RI (with std)
 def figure(density, ri_mean, ri_std):
@@ -60,8 +57,10 @@ def figure(density, ri_mean, ri_std):
 #--------------------------------------------------------------------------#
 # check number of arguments
 if len(sys.argv)==2:
-    main(sys.argv[1])
-    print("done")
+    if main(sys.argv[1]):
+        print("done")
+    else:
+        print("error during execution")
 else:
     exit("arg error - need 1 arg: [param_RI_study_density.txt file]")
 
