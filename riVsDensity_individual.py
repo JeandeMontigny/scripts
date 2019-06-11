@@ -26,13 +26,17 @@ def read_file(fodler, file):
         if m:
             line_count+=1
             density = int(m.group(1))
-            if np.mod(line_count, 100)==0 and len(list_ri_temps)!=0:
+            if np.mod(line_count, 200)==0 and len(list_ri_temps)!=0:
                 list_ri_temps.append(float(m.group(2)))
                 list_ri.append(list_ri_temps)
                 list_ri_temps=[]
             else:
                 list_ri_temps.append(float(m.group(2)))
 
+    return (density, merge_lists(list_ri))
+
+#--------------------------------------------------------------------------#
+def merge_lists(list_ri):
     list_ave_ri=[]
     for i in range(0, len(list_ri[0])):
         temps=0
@@ -40,7 +44,7 @@ def read_file(fodler, file):
             temps+=list_ri[j][i]
         list_ave_ri.append(temps/len(list_ri))
 
-    return (density, list_ave_ri)
+    return list_ave_ri
 
 #--------------------------------------------------------------------------#
 def figure_construction(list_density, list_ri):
@@ -48,7 +52,7 @@ def figure_construction(list_density, list_ri):
     for i in range(0, len(list_ri)):
         plt.plot(list(range(0, len(list_ri[i]))), list_ri[i], label=list_density[i])
 
-    plt.ylim(1.5)
+    plt.ylim(1.5, 11)
     plt.xlabel("simulation time")
     plt.ylabel("regularity index")
 #    plt.legend(fontsize="medium", ncol=2, bbox_to_anchor=(1.04,0.5), loc="center left", title="Density")
