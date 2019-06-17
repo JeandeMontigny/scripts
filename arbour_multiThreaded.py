@@ -4,46 +4,35 @@ import numpy as np
 from scipy.signal import find_peaks
 import matplotlib.pyplot as plt
 
-import threading
-from queue import Queue
+from multiprocessing import Pool
+# from queue import Queue
 import time
 
 #--------------------------------------------------------------------------#
 def main(fodler):
+    start = time.time()
+
     number_of_file = get_nb_files(fodler)
     print(str(number_of_file) + " files to process")
 
-    output_tab = []
-
-    def process_queue():
-        while True:
-            current_file = file_queue.get()
-            output_tab.append(process_file(read_file(current_file)))
-            file_queue.task_done()
-
-    file_queue = Queue()
-    threads_nb = os.cpu_count()
-
-    for i in range(32):
-        t = threading.Thread(target=process_queue)
-        t.daemon = True
-        t.start()
-
-    start = time.time()
-
+    file_queue = []
     for file in os.listdir(fodler):
         if file.endswith(".swc"):
-            file_queue.put(fodler+file)
+            file_queue.append(fodler+file)
 
-    file_queue.join()
+    threads_nb = os.cpu_count()
+    p = Pool(threads_nb)
 
-    # print(threading.enumerate())
+    output = p.map(read_file, enumerate(file_queue))
+
     print("Execution time: " + str(time.time() - start))
+    print(len(output))
 
     return 1
 
 #--------------------------------------------------------------------------#
-def read_file(file):
+def read_file(obj):
+    file = obj[1]
     nb_dend_root = 0; nb_dend_seg = 0; line_count = 0; line_non_point = 0; prev_parent = 0
     coord_soma = [0, 0, 0]; coord_point = [0, 0, 0]
     coord_tab = []; distance_branching_tab = []; distance_terminal_tab = []
