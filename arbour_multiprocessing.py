@@ -1,42 +1,35 @@
 #!/usr/bin/env python3
-import sys, os, re
+import sys, os, re, time
+from multiprocessing import Pool
 import numpy as np
 from scipy.signal import find_peaks
 import matplotlib.pyplot as plt
 
-from multiprocessing import Pool
-import time
-
 #--------------------------------------------------------------------------#
 def main(fodler):
     start = time.time()
-    number_of_file = get_nb_files(fodler)
     threads_nb = int(os.cpu_count()/2)
+    file_queue = [fodler+file for file in os.listdir(fodler) if file.endswith(".swc")]
 
-    print(number_of_file, "files to process, using", threads_nb, "CPUs")
+    print(len(file_queue), "files to process, using", threads_nb, "CPUs")
+    # threads_nb processors will run read_file method for each file in file_queue
+    output = Pool(threads_nb).map(read_file, enumerate(file_queue))
 
-    file_queue = []
-    for file in os.listdir(fodler):
-        if file.endswith(".swc"):
-            file_queue.append(fodler+file)
-
-    proc = Pool(threads_nb)
-    # run read_file method for each file in file_queue, with threads_nb processors
-    output = proc.map(read_file, enumerate(file_queue))
+    figure_construction(output)
 
     print("Execution time:", round(time.time() - start, 2))
+    plt.show()
 
     return 1
 
 #--------------------------------------------------------------------------#
 def read_file(enumerate_obj):
-    file = enumerate_obj[1]
-    nb_dend_root = 0; nb_dend_seg = 0; line_count = 0; line_non_point = 0; prev_parent = 0
+    nb_dend_root = 0; nb_dend_seg = 0; line_count = 0; prev_parent = 0
     coord_soma = [0, 0, 0]; coord_point = [0, 0, 0]
     coord_tab = []; distance_branching_tab = []; distance_terminal_tab = []
     branching_index = []; terminasion_index = []
 
-    for line in open(file, "r").readlines():
+    for line in open(enumerate_obj[1], "r").readlines():
         m = re.search( r' ?([0-9]+) ([0-9]+) (.+) (.+) (.+) (.+) ([-0-9]+).?', line, re.M|re.I)
 
         if m and (line[0] != "#" or line[0] != "\n"):
@@ -63,7 +56,7 @@ def read_file(enumerate_obj):
                 if point_type == 6:
                     distance_terminal_tab.append(distance_3d(coord_point, coord_soma))
 
-                # if the point is not a son of the previous point and don't belong to the soma
+            # if the point is not a son of the previous point or of the soma
             if point_parent < prev_parent and point_parent > 1:
                 # it means that the parent of that point is a branching point
                 branching_index.append(point_parent)
@@ -72,9 +65,6 @@ def read_file(enumerate_obj):
 
             prev_parent = point_parent
             prev_id = point_id
-
-        elif line[0] == "#" or line[0] == "\n":
-            line_non_point+=1
 
     if nb_dend_seg == 0 or len(distance_branching_tab) == 0:
         warn("file only contains a cell body or no branching points")
@@ -95,12 +85,12 @@ def process_file(output):
     peaks = peak_detector(z_coord_distrib)
     cell_type = type_finder(peaks)
 
-    return
+    return []
 
 #--------------------------------------------------------------------------#
 def distance_3d(point1, point2):
     if len(point1) != 3 or len(point2) != 3:
-        raise SystemExit('Error: can\'t calculate distance if point are not in 3D')
+        raise SystemExit('Error: can\'t calculate distance if points are not in 3D')
 
     return round(np.sqrt(np.square(point1[0] - point2[0]) + np.square(point1[1] - point2[1]) + np.square(point1[2] - point2[2])), 3)
 
@@ -119,9 +109,7 @@ def disc_span_95(tab):
 
 #--------------------------------------------------------------------------#
 def anisometry(coord_tab):
-    tab = []
-    for coord in coord_tab:
-        tab.append(iso_distributor(coord))
+    tab = [iso_distributor(coord) for coord in coord_tab]
 
     theo_val = float(len(tab)/8)
     if len(tab) < 2 or theo_val == 0:
@@ -169,8 +157,14 @@ def get_z_distrib(coord_tab):
     return tab_z_count
 
 #--------------------------------------------------------------------------#
+def frange(x, y, jump):
+    while x < y:
+        yield x
+        x += jump
+
+#--------------------------------------------------------------------------#
 def peak_detector(z_distrib, width_value=3):
-    # if width is too low, return 0
+    # if width is too low for result to be meaningful, return 0
     if width_value < 1.5:
         return 0
     peaks, _ = find_peaks(z_distrib, width=width_value)
@@ -191,33 +185,13 @@ def type_finder(peaks):
         return "other"
 
 #--------------------------------------------------------------------------#
-def frange(x, y, jump):
-    while x < y:
-        yield x
-        x += jump
-
-#--------------------------------------------------------------------------#
-def figure_construction():
+def figure_construction(tab):
     plt.figure(1)
 
-    plt.ylim(1.5, 11)
-    plt.xlabel("simulation time")
-    plt.ylabel("regularity index")
-#    plt.legend(fontsize="medium", ncol=2, bbox_to_anchor=(1.04,0.5), loc="center left", title="Density")
-    plt.legend(loc=0)
-    plt.title("layer colapse impact on RI")
-
-#--------------------------------------------------------------------------#
-def get_nb_files(folder):
-    """ Return the number of files to process, including files in sub-folders.
-    @params:
-        folder containing sub-folders and files """
-    nb_of_files = 0
-    for name in os.listdir(folder):
-        if name.endswith(".swc"):
-            nb_of_files += 1
-
-    return nb_of_files
+    plt.ylim()
+    plt.xlabel("")
+    plt.ylabel("")
+    plt.title("")
 
 #--------------------------------------------------------------------------#
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 0, length = 100, fill = "#"):
