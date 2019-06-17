@@ -20,29 +20,36 @@ def main(fodler):
 def read_file(fodler, file):
     density=0; line_count=0
     list_ri=[]; list_ri_temps=[]
+    list_density=[]; list_density_temps=[]
     file_lines=open(fodler+file, "r").readlines()
     for line in file_lines:
-        m=re.search( r'(.+) (.+)', line, re.M|re.I)
+        m=re.search( r'(.+) (.+) (.+)', line, re.M|re.I)
         if m:
             line_count+=1
-            density = int(m.group(1))
+            density = float(m.group(1))
             if np.mod(line_count, 200)==0 and len(list_ri_temps)!=0:
                 list_ri_temps.append(float(m.group(2)))
                 list_ri.append(list_ri_temps)
                 list_ri_temps=[]
+
+                list_density_temps.append(float(m.group(3)))
+                list_density.append(list_density_temps)
+                list_density_temps=[]
+
             else:
                 list_ri_temps.append(float(m.group(2)))
+                list_density_temps.append(float(m.group(3)))
 
-    return (density, merge_lists(list_ri))
+    return (density, merge_lists(list_ri), merge_lists(list_density))
 
 #--------------------------------------------------------------------------#
-def merge_lists(list_ri):
+def merge_lists(multi_list):
     list_ave_ri=[]
-    for i in range(0, len(list_ri[0])):
+    for i in range(0, len(multi_list[0])):
         temps=0
-        for j in range(0, len(list_ri)):
-            temps+=list_ri[j][i]
-        list_ave_ri.append(temps/len(list_ri))
+        for j in range(0, len(multi_list)):
+            temps+=multi_list[j][i]
+        list_ave_ri.append(temps/len(multi_list))
 
     return list_ave_ri
 
