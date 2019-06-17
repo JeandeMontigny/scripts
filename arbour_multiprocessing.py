@@ -13,7 +13,9 @@ def main(fodler):
 
     print(len(file_queue), "files to process, using", threads_nb, "CPUs")
     # threads_nb processors will run read_file method for each file in file_queue
-    output = Pool(threads_nb).map(read_file, enumerate(file_queue))
+    output = regroup_data(Pool(threads_nb).map(read_file, enumerate(file_queue)))
+
+    clusters = clustering(output)
 
     figure_construction(output)
 
@@ -85,7 +87,7 @@ def process_file(output):
     peaks = peak_detector(z_coord_distrib)
     cell_type = type_finder(peaks)
 
-    return []
+    return average_terminal_distance, disc_diam_95, average_branch_distance, aniso_score, z_coord_distrib, peaks
 
 #--------------------------------------------------------------------------#
 def distance_3d(point1, point2):
@@ -185,14 +187,56 @@ def type_finder(peaks):
         return "other"
 
 #--------------------------------------------------------------------------#
+def regroup_data(tab):
+    terminal_dist = []; disc_diam = []; branch_dist = []; aniso = []
+    z_coord_distrib = []; peaks = []
+    for cell in tab:
+        terminal_dist.append(cell[0]); disc_diam.append(cell[1])
+        branch_dist.append(cell[2]); aniso.append(cell[3])
+        z_coord_distrib.append(cell[4]); peaks.append(cell[5])
+
+    return terminal_dist, disc_diam, branch_dist, aniso, z_coord_distrib, peaks
+
+#--------------------------------------------------------------------------#
 def figure_construction(tab):
-    plt.figure(1)
+    aniso = tab[3]
+    fig_violin(aniso)
 
-    plt.ylim()
-    plt.xlabel("")
-    plt.ylabel("")
-    plt.title("")
+    # TODO: clustering
+    # fig_plot(each_cluster)
 
+#--------------------------------------------------------------------------#
+def fig_violin(tab, x_label = "", y_label = "", title = ""):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    violin_parts = ax.violinplot(tab, showmeans = True, showmedians = False)
+    for pc in violin_parts['bodies']:
+        pc.set_facecolor('gray')
+        pc.set_edgecolor('black')
+    violin_parts['cbars'].set_color('black')
+    violin_parts['cmins'].set_color('black')
+    violin_parts['cmaxes'].set_color('black')
+    violin_parts['cmeans'].set_color('black')
+    violin_parts['cmeans'].set_linestyle('--')
+    # violin_parts['cmedians'].set_color('dimgray')
+
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+    ax.set_title(title)
+
+#--------------------------------------------------------------------------#
+def fig_plot(multi_tab, x_label = "", y_label = "", title = ""):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    for tab in multi_tab:
+        ax.plot(tab)
+
+#--------------------------------------------------------------------------#
+def clustering(tab):
+    # TODO
+
+    return
 #--------------------------------------------------------------------------#
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 0, length = 100, fill = "#"):
     """ Create progress bar
