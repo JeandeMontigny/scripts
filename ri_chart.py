@@ -10,7 +10,7 @@ def main(output_file):
     file_lines=fichier.readlines()
     for line in file_lines:
         # on off on-off
-        m=re.search( r'(.+) (.+) (.+)', line, re.M|re.I)
+        m=re.search( r'(.+) (.+) (.+) .+', line, re.M|re.I)
         if m:
             tab_on.append(float(m.group(1)))
             tab_off.append(float(m.group(2)))
