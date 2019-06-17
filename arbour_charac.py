@@ -6,15 +6,13 @@ import matplotlib.pyplot as plt
 
 #--------------------------------------------------------------------------#
 def main(fodler):
-    number_of_file = getNbOfFiles(fodler)
+    number_of_file = getNbOfFiles(fodler); file_nb = 1
     print(str(number_of_file) + " files to process")
-    file_nb = 0
 
     for file in os.listdir(fodler):
         if file.endswith(".swc"):
-            file_nb+=1
-            printProgressBar(file_nb, number_of_file)
-            output = read_file(fodler, file)
+            printProgressBar(file_nb, number_of_file); file_nb+=1
+            output = process_file(read_file(fodler, file))
 
     # figure_construction()
     # plt.show()
@@ -72,17 +70,22 @@ def read_file(fodler, file):
         warn("file only contains a cell body or no branching points")
         return None
 
-    average_terminal_distance=round(np.average(distance_terminal_tab), 3)
-    average_terminal_distance_std=round(np.std(distance_terminal_tab), 3)
-    average_branch_distance=round(np.average(distance_branching_tab), 3)
-    average_branch_distance_std=round(np.std(distance_branching_tab), 3)
-    disc_diam_95=disc_span_95(distance_terminal_tab)
-    aniso_score = anisometry(coord_tab)
-    z_coord_distrib = get_z_distrib(coord_tab)
+    return distance_terminal_tab, distance_branching_tab, coord_tab
+
+#--------------------------------------------------------------------------#
+def process_file(output):
+    # output: distance_terminal_tab, distance_branching_tab, coord_tab
+    average_terminal_distance=round(np.average(output[0]), 3)
+    average_terminal_distance_std=round(np.std(output[0]), 3)
+    disc_diam_95=disc_span_95(output[0])
+    average_branch_distance=round(np.average(output[1]), 3)
+    average_branch_distance_std=round(np.std(output[1]), 3)
+    aniso_score = anisometry(output[2])
+    z_coord_distrib = get_z_distrib(output[2])
     peaks = peak_detector(z_coord_distrib)
     cell_type = type_finder(peaks)
 
-    return nb_dend_root, len(branching_index), average_terminal_distance, average_branch_distance, disc_diam_95, aniso_score
+    return
 
 #--------------------------------------------------------------------------#
 def distance_3d(point1, point2):
@@ -106,26 +109,54 @@ def disc_span_95(tab):
 
 #--------------------------------------------------------------------------#
 def anisometry(coord_tab):
-# TODO
-    return 0.5
+    tab = []
+    for coord in coord_tab:
+        tab.append(iso_distributor(coord))
+
+    theo_val = float(len(tab)/8)
+    if len(tab) < 2 or theo_val == 0:
+        return 0
+    return round(((abs(tab.count(1)-theo_val)/theo_val)+(abs(tab.count(2)-theo_val)/theo_val)+(abs(tab.count(3)-theo_val)/theo_val)+(abs(tab.count(4)-theo_val)/theo_val)+(abs(tab.count(5)-theo_val)/theo_val)+(abs(tab.count(6)-theo_val)/theo_val)+(abs(tab.count(7)-theo_val)/theo_val)+(abs(tab.count(8)-theo_val)/theo_val))/14, 3)
+
+#--------------------------------------------------------------------------#
+def iso_distributor(coord):
+    x = coord[0]; y = coord[1]
+    if x < 0:
+        if y < 0:
+            return 1 if abs(x) > abs(y) else 2
+        else:
+            return 3 if abs(x) > y else 4
+    else:
+        if y < 0:
+            return 5 if x > abs(y) else 6
+        else:
+            return 7 if x > y else 8
+
+#--------------------------------------------------------------------------#
+def count(tab, inf_boundary, sup_boundary):
+    count = 0
+    for i in tab:
+        if abs(i) >= inf_boundary and abs(i) < sup_boundary:
+            count+=1
+    return count
+
+#--------------------------------------------------------------------------#
+def count_z(multi_tab, inf_boundary, sup_boundary):
+    count = 0
+    for tab in multi_tab:
+        if abs(tab[2]) >= inf_boundary and abs(tab[2]) < sup_boundary:
+            count+=1
+    return count
 
 #--------------------------------------------------------------------------#
 def get_z_distrib(coord_tab):
-    tab_z_count=[]; interval=[]
+    tab_z_count = []; interval = []
     for i in frange(0,60, 0.5):
-        tab_z_count.append(count(coord_tab, i, i+0.5))
+        tab_z_count.append(count_z(coord_tab, i, i+0.5))
         interval.append(i)
-    tab_z_count=np.asarray(tab_z_count)
+    tab_z_count = np.asarray(tab_z_count)
 
     return tab_z_count
-
-#--------------------------------------------------------------------------#
-def count(multi_tab, inf_boundary, sup_boundary):
-    count=0
-    for tab in multi_tab:
-        if abs(tab[2])>=inf_boundary and abs(tab[2])<sup_boundary:
-            count+=1
-    return count
 
 #--------------------------------------------------------------------------#
 def peak_detector(z_distrib, width_value=3):
