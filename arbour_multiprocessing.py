@@ -10,22 +10,21 @@ import time
 #--------------------------------------------------------------------------#
 def main(fodler):
     start = time.time()
-
     number_of_file = get_nb_files(fodler)
-    print(str(number_of_file) + " files to process")
+    threads_nb = os.cpu_count()
+
+    print(number_of_file, "files to process, using", threads_nb, "CPUs")
 
     file_queue = []
     for file in os.listdir(fodler):
         if file.endswith(".swc"):
             file_queue.append(fodler+file)
 
-    threads_nb = os.cpu_count()
     proc = Pool(threads_nb)
-    print("running with " + str(threads_nb) + " processors")
     # run read_file method for each file in file_queue, with threads_nb processors
     output = proc.map(read_file, enumerate(file_queue))
 
-    print("Execution time: " + str(round(time.time() - start, 2)))
+    print("Execution time:", round(time.time() - start, 2))
 
     return 1
 
