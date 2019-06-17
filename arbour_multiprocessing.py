@@ -11,7 +11,7 @@ import time
 def main(fodler):
     start = time.time()
     number_of_file = get_nb_files(fodler)
-    threads_nb = os.cpu_count()
+    threads_nb = int(os.cpu_count()/2)
 
     print(number_of_file, "files to process, using", threads_nb, "CPUs")
 
