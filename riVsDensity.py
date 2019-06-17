@@ -47,7 +47,7 @@ def figure(density, ri_mean, ri_std):
 
     plt.figure(1)
     plt.errorbar(density, ri_mean, ri_std, color='black', ecolor='gray')
-#    plt.ylim(1.5)
+    plt.ylim(1.5, 11)
     plt.xlabel("density")
     plt.ylabel("regularity index")
     plt.title("cell density impact on RI")
