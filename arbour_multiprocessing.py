@@ -18,7 +18,7 @@ def main(fodler):
     # threads_nb processors will run read_file method for each file in file_queue
     output = regroup_data(Pool(threads_nb).map(read_file, enumerate(file_queue)))
 
-    analyse(output)
+    analyse(output, clustering = True)
 
     print("Execution time:", round(time.time() - start, 2))
     plt.show()
@@ -54,10 +54,10 @@ def read_file(enumerate_obj):
                 coord_tab.append([point_x - coord_soma[0], point_y - coord_soma[1], point_z - coord_soma[2]])
                 # if point is a branching
                 if point_type == 5:
-                    distance_branching_tab.append(distance_3d(coord_point, coord_soma))
+                    distance_branching_tab.append(distance_xd(coord_point, coord_soma))
                 # if point is a terminal
                 if point_type == 6:
-                    distance_terminal_tab.append(distance_3d(coord_point, coord_soma))
+                    distance_terminal_tab.append(distance_xd(coord_point, coord_soma))
 
             # if the point is not a son of the previous point or of the soma
             if point_parent < prev_parent and point_parent > 1:
@@ -96,7 +96,8 @@ def analyse(output, figures = True, clustering = False, pca = False):
         figure_construction(output)
 
     if clustering:
-        clusters = clustering([output[0], output[1], output[2], output[3]], 5)
+        emfo_k(output)
+        clusters = k_clustering([output[0], output[1], output[2], output[3]], 5)
         colours = [str(clust/5) for clust in clusters[1]]
         figure_cloud_3d([output[1], output[2], output[3]], colours)
 
@@ -104,11 +105,15 @@ def analyse(output, figures = True, clustering = False, pca = False):
         pca_analysis([output[0], output[1], output[2], output[3]])
 
 #--------------------------------------------------------------------------#
-def distance_3d(point1, point2):
-    if len(point1) != 3 or len(point2) != 3:
-        raise SystemExit('Error: can\'t calculate distance if points are not in 3D')
+def distance_xd(point1, point2):
+    if len(point1) != len(point2):
+        raise SystemExit('Error: can\'t calculate distance if points haven\'t got the same number of dimensions')
 
-    return round(np.sqrt(np.square(point1[0] - point2[0]) + np.square(point1[1] - point2[1]) + np.square(point1[2] - point2[2])), 3)
+    sum_square = 0
+    for dim in range(0, len(point1)):
+        sum_square += np.square(point1[dim] - point2[dim])
+
+    return round(np.sqrt(sum_square), 3)
 
 #--------------------------------------------------------------------------#
 def disc_span_95(tab):
@@ -216,6 +221,8 @@ def regroup_data(tab):
 def figure_construction(tab):
     aniso = tab[3]
     fig_violin(aniso)
+    #TODO: other measures plot
+    # terminal_dist, disc_diam, branch_dist, aniso, z_coord_distrib, peaks
 
 #--------------------------------------------------------------------------#
 def fig_violin(tab, x_label = "", y_label = "", title = ""):
@@ -255,12 +262,39 @@ def figure_cloud_3d(tab, colours = None, x_label = "x-axis", y_label = "y-axis",
     ax.set_title(title)
 
 #--------------------------------------------------------------------------#
-def clustering(tab, k_value = 5):
+def k_clustering(tab, k_value = 5):
     tab_ndarray =  np.array(tab).T
     whitened = vq.whiten(tab_ndarray, check_finite = False)
     centroids, labels = vq.kmeans2(data = whitened, k = k_value)
 
     return centroids, labels
+
+#--------------------------------------------------------------------------#
+def emfo_k(output, min_k = 1, max_k = 15):
+    """ Elbow Method For Optimal k """
+    distortion = []
+    data = [output[0], output[1], output[2], output[3]]
+    for k in range(min_k, max_k):
+        clusters = k_clustering(data, k)
+        distortion.append(get_distortion(data, clusters))
+    plt.figure()
+    plt.plot(distortion, [range(min_k, max_k)])
+    plt.xlabel("Number of clusters (k)")
+    plt.ylabel("Distortion score")
+    plt.title("Elbow method for k-means clustering optimal cluster number")
+    plt.show()
+
+#--------------------------------------------------------------------------#
+def get_distortion(data, clusters):
+    """ return the sum of squared distances from each point to its assigned centroid
+    """
+    list_dist = []
+    for i in range(0, len(data[0])):
+        point_coord = [data[0][i], data[1][i], data[2][i], data[3][i]]
+        centroid_coord = clusters[0][clusters[1][i]]
+        list_dist.append(np.square(distance_xd(point_coord, centroid_coord)))
+
+    return sum(list_dist)
 
 #--------------------------------------------------------------------------#
 def pca_analysis(tab):
