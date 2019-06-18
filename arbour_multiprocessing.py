@@ -3,7 +3,10 @@ import sys, os, re, time
 from multiprocessing import Pool
 import numpy as np
 from scipy.signal import find_peaks
+import scipy.cluster.vq as vq
 import matplotlib.pyplot as plt
+from matplotlib.mlab import PCA
+from mpl_toolkits.mplot3d import Axes3D
 
 #--------------------------------------------------------------------------#
 def main(fodler):
@@ -15,9 +18,7 @@ def main(fodler):
     # threads_nb processors will run read_file method for each file in file_queue
     output = regroup_data(Pool(threads_nb).map(read_file, enumerate(file_queue)))
 
-    clusters = clustering(output)
-
-    figure_construction(output)
+    analyse(output)
 
     print("Execution time:", round(time.time() - start, 2))
     plt.show()
@@ -88,6 +89,19 @@ def process_file(output):
     cell_type = type_finder(peaks)
 
     return average_terminal_distance, disc_diam_95, average_branch_distance, aniso_score, z_coord_distrib, peaks
+
+#--------------------------------------------------------------------------#
+def analyse(output, figures = True, clustering = False, pca = False):
+    if figures:
+        figure_construction(output)
+
+    if clustering:
+        clusters = clustering([output[0], output[1], output[2], output[3]], 5)
+        colours = [str(clust/5) for clust in clusters[1]]
+        figure_cloud_3d([output[1], output[2], output[3]], colours)
+
+    if pca:
+        pca_analysis([output[0], output[1], output[2], output[3]])
 
 #--------------------------------------------------------------------------#
 def distance_3d(point1, point2):
@@ -191,9 +205,10 @@ def regroup_data(tab):
     terminal_dist = []; disc_diam = []; branch_dist = []; aniso = []
     z_coord_distrib = []; peaks = []
     for cell in tab:
-        terminal_dist.append(cell[0]); disc_diam.append(cell[1])
-        branch_dist.append(cell[2]); aniso.append(cell[3])
-        z_coord_distrib.append(cell[4]); peaks.append(cell[5])
+        if cell[1] is not None:
+            terminal_dist.append(cell[0]); disc_diam.append(cell[1])
+            branch_dist.append(cell[2]); aniso.append(cell[3])
+            z_coord_distrib.append(cell[4]); peaks.append(cell[5])
 
     return terminal_dist, disc_diam, branch_dist, aniso, z_coord_distrib, peaks
 
@@ -201,9 +216,6 @@ def regroup_data(tab):
 def figure_construction(tab):
     aniso = tab[3]
     fig_violin(aniso)
-
-    # TODO: clustering
-    # fig_plot(each_cluster)
 
 #--------------------------------------------------------------------------#
 def fig_violin(tab, x_label = "", y_label = "", title = ""):
@@ -233,12 +245,47 @@ def fig_plot(multi_tab, x_label = "", y_label = "", title = ""):
         ax.plot(tab)
 
 #--------------------------------------------------------------------------#
-def clustering(tab):
-    # TODO
+def figure_cloud_3d(tab, colours = None, x_label = "x-axis", y_label = "y-axis", z_label = "z-axis", title = ""):
+    fig=plt.figure()
+    ax=Axes3D(fig)
+    ax.scatter(tab[0], tab[1], tab[2], color = colours, s = 100)
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+    ax.set_zlabel(z_label)
+    ax.set_title(title)
 
-    return
 #--------------------------------------------------------------------------#
-def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 0, length = 100, fill = "#"):
+def clustering(tab, k_value = 5):
+    tab_ndarray =  np.array(tab).T
+    whitened = vq.whiten(tab_ndarray, check_finite = False)
+    centroids, labels = vq.kmeans2(data = whitened, k = k_value)
+
+    return centroids, labels
+
+#--------------------------------------------------------------------------#
+def pca_analysis(tab):
+    param1 = np.array(tab[0]); param2 = np.array(tab[1])
+    param3 = np.array(tab[2]); param4 = np.array(tab[3])
+    matrix = []
+    for i in range (0, len(param1)):
+        matrix.append([float(param1[i]), float(param2[i]), float(param3[i]), float(param4[i])])
+    matrix = np.array(matrix)
+    results = PCA(matrix)
+    print("PCA - variance percentages for each component:", results.fracs)
+
+    plot3d_pca(results)
+
+#--------------------------------------------------------------------------#
+def plot3d_pca(results):
+    x = []; y = []; z = []
+    for item in results.Y:
+        x.append(item[0])
+        y.append(item[1])
+        z.append(item[2])
+    figure_cloud_3d([x, y, z])
+
+#--------------------------------------------------------------------------#
+def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 0, length = 100, fill = "#"):
     """ Create progress bar
     @params:
         iteration   - Required: current iteration (Int)
