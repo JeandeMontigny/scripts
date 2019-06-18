@@ -88,7 +88,8 @@ def process_file(output):
     peaks = peak_detector(z_coord_distrib)
     cell_type = type_finder(peaks)
 
-    return average_terminal_distance, disc_diam_95, average_branch_distance, aniso_score, z_coord_distrib, peaks
+    return average_terminal_distance, disc_diam_95, average_branch_distance, \
+        aniso_score, z_coord_distrib, peaks
 
 #--------------------------------------------------------------------------#
 def analyse(output, figures = True, clustering = False, pca = False):
@@ -135,7 +136,16 @@ def anisometry(coord_tab):
     theo_val = float(len(tab)/8)
     if len(tab) < 2 or theo_val == 0:
         return 0
-    return round(((abs(tab.count(1)-theo_val)/theo_val)+(abs(tab.count(2)-theo_val)/theo_val)+(abs(tab.count(3)-theo_val)/theo_val)+(abs(tab.count(4)-theo_val)/theo_val)+(abs(tab.count(5)-theo_val)/theo_val)+(abs(tab.count(6)-theo_val)/theo_val)+(abs(tab.count(7)-theo_val)/theo_val)+(abs(tab.count(8)-theo_val)/theo_val))/14, 3)
+    return round( ( \
+        (abs(tab.count(1) - theo_val)/theo_val) + \
+        (abs(tab.count(2) - theo_val)/theo_val) + \
+        (abs(tab.count(3) - theo_val)/theo_val) + \
+        (abs(tab.count(4) - theo_val)/theo_val) + \
+        (abs(tab.count(5) - theo_val)/theo_val) + \
+        (abs(tab.count(6) - theo_val)/theo_val) + \
+        (abs(tab.count(7) - theo_val)/theo_val) + \
+        (abs(tab.count(8) - theo_val)/theo_val) \
+        ) /14, 3)
 
 #--------------------------------------------------------------------------#
 def iso_distributor(coord):
@@ -322,11 +332,11 @@ def plot3d_pca(results):
 def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 0, length = 100, fill = "#"):
     """ Create progress bar
     @params:
-        iteration   - Required: current iteration (Int)
-        total       - Required: total iterations (Int)
-        decimals    - Optional: positive number of decimals in percent complete (Int)
-        length      - Optional: character length of bar (Int)
-        fill        - Optional: bar fill character (Str)"""
+        iteration - Required: current iteration (Int)
+        total     - Required: total iterations (Int)
+        decimals  - Optional: positive number of decimals in percent complete (Int)
+        length    - Optional: character length of bar (Int)
+        fill      - Optional: bar fill character (Str)"""
     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
