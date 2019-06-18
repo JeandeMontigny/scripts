@@ -278,7 +278,7 @@ def emfo_k(output, min_k = 1, max_k = 15):
         clusters = k_clustering(data, k)
         distortion.append(get_distortion(data, clusters))
     plt.figure()
-    plt.plot(distortion, [range(min_k, max_k)])
+    plt.plot([k for k in range(min_k, max_k)], distortion)
     plt.xlabel("Number of clusters (k)")
     plt.ylabel("Distortion score")
     plt.title("Elbow method for k-means clustering optimal cluster number")
