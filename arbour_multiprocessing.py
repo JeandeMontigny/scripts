@@ -7,6 +7,7 @@ import scipy.cluster.vq as vq
 import matplotlib.pyplot as plt
 from matplotlib.mlab import PCA
 from mpl_toolkits.mplot3d import Axes3D
+import scipy.signal as sig
 
 #--------------------------------------------------------------------------#
 def main(fodler):
@@ -18,9 +19,9 @@ def main(fodler):
     # threads_nb processors will run read_file method for each file in file_queue
     output = regroup_data(Pool(threads_nb).map(read_file, enumerate(file_queue)))
 
-    analyse(output, clustering = True)
+    analyse(output, clustering = False)
 
-    print("Execution time:", round(time.time() - start, 2))
+    print("Execution time:", round(time.time() - start, 2), "sec")
     plt.show()
 
     return 1
@@ -84,7 +85,7 @@ def process_file(output):
     average_branch_distance=round(np.average(output[1]), 3)
     average_branch_distance_std=round(np.std(output[1]), 3)
     aniso_score = anisometry(output[2])
-    z_coord_distrib = get_z_distrib(output[2])
+    z_coord_distrib = get_z_distrib(output[2], smooth = True)
     peaks = peak_detector(z_coord_distrib)
     cell_type = type_finder(peaks)
 
@@ -104,6 +105,9 @@ def analyse(output, figures = True, clustering = False, pca = False):
 
     if pca:
         pca_analysis([output[0], output[1], output[2], output[3]])
+
+    z_distrib = output[4]
+    # TODO:analysis
 
 #--------------------------------------------------------------------------#
 def distance_xd(point1, point2):
@@ -178,12 +182,14 @@ def count_z(multi_tab, inf_boundary, sup_boundary):
     return count
 
 #--------------------------------------------------------------------------#
-def get_z_distrib(coord_tab):
+def get_z_distrib(coord_tab, smooth = False):
     tab_z_count = []; interval = []
-    for i in frange(0,60, 0.5):
+    for i in frange(0,75, 0.5):
         tab_z_count.append(count_z(coord_tab, i, i+0.5))
         interval.append(i)
     tab_z_count = np.asarray(tab_z_count)
+    if smooth:
+        tab_z_count = sig.savgol_filter(tab_z_count, 5, 3)
 
     return tab_z_count
 
@@ -194,23 +200,30 @@ def frange(x, y, jump):
         x += jump
 
 #--------------------------------------------------------------------------#
-def peak_detector(z_distrib, width_value=3):
+def peak_detector(z_distrib, width_value = 3, plot = False):
     # if width is too low for result to be meaningful, return 0
     if width_value < 1.5:
         return 0
-    peaks, _ = find_peaks(z_distrib, width=width_value)
+    peaks, _ = find_peaks(z_distrib, height=max(z_distrib)/4, width=width_value)
     # if no peaks have been found, lower the width
     if len(peaks) == 0:
         return peak_detector(z_distrib, width_value-0.5)
+    if plot:
+        plt.figure()
+        plt.plot(z_distrib)
+        for point in peaks:
+            plt.plot(point, max(z_distrib)*1.05, 'ro')
+        plt.show()
+
     return peaks
 
 #--------------------------------------------------------------------------#
 def type_finder(peaks):
-    if np.amax(peaks) < 50:
+    if np.amax(peaks) < 59:
         return "on"
-    if np.amin(peaks) > 50:
+    if np.amin(peaks) > 59:
         return "off"
-    if np.amin(peaks) < 50 and np.amax(peaks) > 50:
+    if np.amin(peaks) < 59 and np.amax(peaks) > 59:
         return "on-off"
     else:
         return "other"
@@ -229,8 +242,39 @@ def regroup_data(tab):
 
 #--------------------------------------------------------------------------#
 def figure_construction(tab):
-    aniso = tab[3]
-    fig_violin(aniso)
+    # diam = tab[1]; branch = tab[2]; aniso = tab[3]
+    # fig_violin(aniso, title = "anisometry score distribution")
+    # fig_violin(diam, title = "diameter distribution")
+    # fig_violin(branch, title = "branching distance distribution")
+
+    z_distrib = tab[4]; peaks = tab[5]
+    z_on = []; z_off = []; z_on_off = []
+    for i in range(0, len(peaks)):
+        if type_finder(peaks[i]) == "on":
+            z_on.append(z_distrib[i])
+        elif type_finder(peaks[i]) == "off":
+            z_off.append(z_distrib[i])
+        elif type_finder(peaks[i]) == "on-off":
+            z_on_off.append(z_distrib[i])
+
+    print(len(z_on), "on cells,", len(z_off), "off cells,", len(z_on_off), "on-off cells")
+
+    plt.figure(97)
+    for distrib in z_on:
+        plt.plot(distrib)
+        plt.xlim(0, 120)
+        plt.title("on")
+    plt.figure(98)
+    for distrib in z_off:
+        plt.plot(distrib)
+        plt.xlim(0, 120)
+        plt.title("off")
+    plt.figure(99)
+    for distrib in z_on_off:
+        plt.plot(distrib)
+        plt.xlim(0, 120)
+        plt.title("on-off")
+
     #TODO: other measures plot
     # terminal_dist, disc_diam, branch_dist, aniso, z_coord_distrib, peaks
 
@@ -292,7 +336,6 @@ def emfo_k(output, min_k = 1, max_k = 15):
     plt.xlabel("Number of clusters (k)")
     plt.ylabel("Distortion score")
     plt.title("Elbow method for k-means clustering optimal cluster number")
-    plt.show()
 
 #--------------------------------------------------------------------------#
 def get_distortion(data, clusters):
