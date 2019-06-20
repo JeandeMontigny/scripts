@@ -106,13 +106,13 @@ def analyse(output, figures = True, clustering = False, pca = False):
     if pca:
         pca_analysis([output[0], output[1], output[2], output[3]])
 
-    z_distrib = output[4]
-    # TODO:analysis
-
 #--------------------------------------------------------------------------#
 def distance_xd(point1, point2):
+    if len(np.shape(point1)) == 0 and len(np.shape(point2)) == 0:
+        return round(np.sqrt(np.square(point1 - point2)), 3)
+
     if len(point1) != len(point2):
-        raise SystemExit('Error: can\'t calculate distance if points haven\'t got the same number of dimensions')
+        raise SystemExit('Error: can\'t calculate distance if points don\'t have the same number of dimensions')
 
     sum_square = 0
     for dim in range(0, len(point1)):
@@ -249,31 +249,51 @@ def figure_construction(tab):
 
     z_distrib = tab[4]; peaks = tab[5]
     z_on = []; z_off = []; z_on_off = []
+    peaks_tab = []
     for i in range(0, len(peaks)):
         if type_finder(peaks[i]) == "on":
             z_on.append(z_distrib[i])
+            peaks_tab.append(round(np.average(peaks[i]), 2))
         elif type_finder(peaks[i]) == "off":
             z_off.append(z_distrib[i])
+            peaks_tab.append(round(np.average(peaks[i]), 2))
         elif type_finder(peaks[i]) == "on-off":
             z_on_off.append(z_distrib[i])
 
     print(len(z_on), "on cells,", len(z_off), "off cells,", len(z_on_off), "on-off cells")
 
-    plt.figure(97)
-    for distrib in z_on:
-        plt.plot(distrib)
-        plt.xlim(0, 120)
-        plt.title("on")
-    plt.figure(98)
-    for distrib in z_off:
-        plt.plot(distrib)
-        plt.xlim(0, 120)
-        plt.title("off")
-    plt.figure(99)
-    for distrib in z_on_off:
-        plt.plot(distrib)
-        plt.xlim(0, 120)
-        plt.title("on-off")
+    emfo_k(peaks_tab)
+    centroid, labels = k_clustering(peaks_tab, k_value = 4)
+
+
+    # mean_strat_depth_on = []
+    # plt.figure(97)
+    # for distrib in z_on:
+    #     mean_strat_depth_on.append(np.average(distrib))
+    #     plt.plot(distrib)
+    #     plt.xlim(0, 120)
+    #     plt.title("on")
+    #     fig_violin(mean_strat_depth_on, title = "on")
+    #
+    # mean_strat_depth_off = []
+    # plt.figure(98)
+    # for distrib in z_off:
+    #     mean_strat_depth_off.append(np.average(distrib))
+    #     plt.plot(distrib)
+    #     plt.xlim(0, 120)
+    #     plt.title("off")
+    #     fig_violin(mean_strat_depth_off, title = "off")
+    #
+    # mean_strat_depth_on_off = []
+    # plt.figure(99)
+    # for distrib in z_on_off:
+    #     mean_strat_depth_on_off.append(np.average(distrib))
+    #     plt.plot(distrib)
+    #     plt.xlim(0, 120)
+    #     plt.title("on-off")
+    #     fig_violin(mean_strat_depth_on_off, title = "on-off")
+
+    plt.show()
 
     #TODO: other measures plot
     # terminal_dist, disc_diam, branch_dist, aniso, z_coord_distrib, peaks
@@ -327,7 +347,7 @@ def k_clustering(tab, k_value = 5):
 def emfo_k(output, min_k = 1, max_k = 15):
     """ Elbow Method For Optimal k """
     distortion = []
-    data = [output[0], output[1], output[2], output[3]]
+    data = [measure for measure in output]
     for k in range(min_k, max_k):
         clusters = k_clustering(data, k)
         distortion.append(get_distortion(data, clusters))
@@ -342,10 +362,15 @@ def get_distortion(data, clusters):
     """ return the sum of squared distances from each point to its assigned centroid
     """
     list_dist = []
-    for i in range(0, len(data[0])):
-        point_coord = [data[0][i], data[1][i], data[2][i], data[3][i]]
-        centroid_coord = clusters[0][clusters[1][i]]
-        list_dist.append(np.square(distance_xd(point_coord, centroid_coord)))
+    if len(np.shape(data)) == 1:
+        for i in range(0, len(data)):
+            centroid_coord = clusters[0][clusters[1][i]]
+            list_dist.append(np.square(distance_xd(data[i], centroid_coord)))
+    else:
+        for i in range(0, len(data[0])):
+            point_coord = [measure[i] for measure in data]
+            centroid_coord = clusters[0][clusters[1][i]]
+            list_dist.append(np.square(distance_xd(point_coord, centroid_coord)))
 
     return sum(list_dist)
 
