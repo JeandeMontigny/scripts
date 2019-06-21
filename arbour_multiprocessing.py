@@ -81,11 +81,11 @@ def read_file(enumerate_obj):
 #--------------------------------------------------------------------------#
 def process_file(output):
     average_terminal_distance = round(np.average(output[0]), 3)
-    average_terminal_distance_std = round(np.std(output[0]), 3)
+    # average_terminal_distance_std = round(np.std(output[0]), 3)
     disc_diam_95 = disc_span_95(output[0])
     nb_branching = len(output[1])
     average_branch_distance = round(np.average(output[1]), 3)
-    average_branch_distance_std = round(np.std(output[1]), 3)
+    # average_branch_distance_std = round(np.std(output[1]), 3)
     aniso_score = anisometry(output[2])
     z_coord_distrib = get_z_distrib(output[2], smooth = True)
     peaks = peak_detector(z_coord_distrib)
@@ -101,7 +101,9 @@ def analyse(output, figures = True, clustering = False, pca = False):
         figure_construction(output)
 
     if clustering:
-        clusters = k_clustering([output[0], output[1], output[3], output[2]], 5, emfo = True, figure = True, x_label = "terminal distance", y_label = "arbour diameter", z_label = "aniso score")
+        clusters = k_clustering([output[0], output[1], output[3], output[2]], \
+            5, emfo = True, figure = True, x_label = "terminal distance", \
+            y_label = "arbour diameter", z_label = "aniso score")
 
         # clustering separated by types (on, off, on-off)
         data = split_by_type(output)
@@ -119,13 +121,6 @@ def analyse(output, figures = True, clustering = False, pca = False):
             data[2][2]], 3, emfo = True, figure = True, \
             x_label = "arbour diameter", y_label = "aniso score", \
             z_label = "branching nb", title = "on-off")
-
-        # plt.figure()
-        # fig_violin(mean_z_terminal_on, title = "on cells terminal z mean lamination depth")
-        # plt.figure()
-        # fig_violin(mean_z_terminal_off, title = "off cells terminal z mean lamination depth")
-        # plt.show()
-
 
     if pca:
         pca_analysis([output[0], output[1], output[2], output[3]])
@@ -228,7 +223,7 @@ def peak_detector(z_distrib, width_value = 3, plot = False):
     # if width is too low for result to be meaningful, return 0
     if width_value < 1.5:
         return 0
-    peaks, _ = find_peaks(z_distrib, height=max(z_distrib)/4, width=width_value)
+    peaks, _ = find_peaks(z_distrib, height = max(z_distrib)/4, width = width_value)
     # if no peaks have been found, lower the width
     if len(peaks) == 0:
         return peak_detector(z_distrib, width_value-0.5)
@@ -273,7 +268,6 @@ def split_by_type(output):
 
     for i in range(0, len(output[5])):
         type = type_finder(output[5][i])
-
         if type == "on":
             term_dist_sub_on.append(output[0][i])
             diam_sub_on.append(output[1][i])
@@ -281,7 +275,6 @@ def split_by_type(output):
             aniso_sub_on.append(output[3][i])
             mean_z_terminal_on.append(output[6][i])
             branching_nb_on.append(output[7][i])
-
         if type == "off":
             term_dist_sub_off.append(output[0][i])
             diam_sub_off.append(output[1][i])
@@ -289,7 +282,6 @@ def split_by_type(output):
             aniso_sub_off.append(output[3][i])
             mean_z_terminal_off.append(output[6][i])
             branching_nb_off.append(output[7][i])
-
         if type == "on-off":
             term_dist_sub_on_off.append(output[0][i])
             diam_sub_on_off.append(output[1][i])
@@ -336,88 +328,6 @@ def figure_construction(tab):
         labels = ["", "all", "", "on", "", "off", "", "on-off"], \
         titles =  ["terminal distance", "arbour diameter", "branching distance",\
             "anisometry score", "mean terminal depth", "branching number"])
-
-    # z_distrib = tab[4]; peaks = tab[5]
-    # z_on = []; z_off = []; z_on_off = []
-    # peaks_tab = []; aniso_tab = []; diam_tab = []
-    #
-    # for i in range(0, len(peaks)):
-    #     if type_finder(peaks[i]) == "on":
-    #         z_on.append(z_distrib[i])
-    #         # peaks_tab.append(round(np.average(peaks[i]), 2))
-    #         peaks_tab.append(round(np.average(z_distrib[i]), 2))
-    #         peaks_mean_on.append(round(np.average(z_distrib[i]), 2))
-    #         diam_tab.append(tab[1][i])
-    #         aniso_tab.append(tab[3][i])
-    #     elif type_finder(peaks[i]) == "off":
-    #         z_off.append(z_distrib[i])
-    #         # peaks_tab.append(round(np.average(peaks[i]), 2))
-    #         peaks_tab.append(round(np.average(z_distrib[i]), 2))
-    #         peaks_mean_off.append(round(np.average(z_distrib[i]), 2))
-    #         diam_tab.append(tab[1][i])
-    #         aniso_tab.append(tab[3][i])
-    #     elif type_finder(peaks[i]) == "on-off":
-    #         z_on_off.append(z_distrib[i])
-    #
-    # print(len(z_on), "on cells,", len(z_off), "off cells,", len(z_on_off), "on-off cells")
-    #
-    # peaks_mean = [round(np.average(distrib), 2) for distrib in z_distrib]
-    #
-    # fig_violin(peaks_mean, title = "average lamination depth")
-    # fig_violin(peaks_mean_on, title = "on average lamination depth")
-    # fig_violin(peaks_mean_off, title = "off average lamination depth")
-    #
-    # new_data = [peaks_tab, diam_tab, aniso_tab]
-    # emfo_k(new_data)
-    # clusters = k_clustering(new_data, k_value = 4)
-    # colours = get_colours(clusters[1])
-    # figure_cloud_3d([peaks_tab, diam_tab, aniso_tab], colours, x_label = "mean lamination depth", y_label = "arbour diameter", z_label = "anisometry")
-
-    # centroid, labels = k_clustering(new_data, k_value = 6)
-    # plt.figure()
-    # colours = [str(clust/3) for clust in labels]
-    # figure_cloud_3d([peaks_tab, tab[3], tab[1]], colours)
-    # plt.show()
-
-    # emfo_k(peaks_tab)
-    # centroid, labels = k_clustering(peaks_tab, k_value = 6)
-    # plt.figure()
-    # colours = [str(clust/5) for clust in labels]
-    # plt.scatter(peaks_tab, [1 for i in range(0, len(peaks_tab))], c = colours)
-    # plt.show()
-
-
-    # mean_strat_depth_on = []
-    # plt.figure(97)
-    # for distrib in z_on:
-    #     mean_strat_depth_on.append(np.average(distrib))
-    #     plt.plot(distrib)
-    #     plt.xlim(0, 120)
-    #     plt.title("on")
-    #     fig_violin(mean_strat_depth_on, title = "on")
-    #
-    # mean_strat_depth_off = []
-    # plt.figure(98)
-    # for distrib in z_off:
-    #     mean_strat_depth_off.append(np.average(distrib))
-    #     plt.plot(distrib)
-    #     plt.xlim(0, 120)
-    #     plt.title("off")
-    #     fig_violin(mean_strat_depth_off, title = "off")
-    #
-    # mean_strat_depth_on_off = []
-    # plt.figure(99)
-    # for distrib in z_on_off:
-    #     mean_strat_depth_on_off.append(np.average(distrib))
-    #     plt.plot(distrib)
-    #     plt.xlim(0, 120)
-    #     plt.title("on-off")
-    #     fig_violin(mean_strat_depth_on_off, title = "on-off")
-
-    # plt.show()
-
-    #TODO: other measures plot
-    # terminal_dist, disc_diam, branch_dist, aniso, z_coord_distrib, peaks
 
 #--------------------------------------------------------------------------#
 def fig_violin(tab, x_label = "", y_label = "", title = ""):
