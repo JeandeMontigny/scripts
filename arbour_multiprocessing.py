@@ -19,7 +19,7 @@ def main(fodler):
     # threads_nb processors will run read_file method for each file in file_queue
     output = regroup_data(Pool(threads_nb).map(read_file, enumerate(file_queue)))
 
-    analyse(output, figures = True, clustering = False)
+    analyse(output, figures = True, clustering = True)
 
     print("Execution time:", round(time.time() - start, 2), "sec")
     plt.show()
@@ -101,26 +101,26 @@ def analyse(output, figures = True, clustering = False, pca = False):
         figure_construction(output)
 
     if clustering:
-        clusters = k_clustering([output[0], output[1], output[3], output[2]], \
-            5, emfo = True, figure = True, x_label = "terminal distance", \
-            y_label = "arbour diameter", z_label = "aniso score")
+        clusters = k_clustering([output[1], output[3], output[7], output[2]], \
+            4, emfo = True, figure = True, x_label = "arbour diameter", \
+            y_label = "aniso score", z_label = "branching number", title = "all")
 
         # clustering separated by types (on, off, on-off)
         data = split_by_type(output)
         clusters_1 = k_clustering([data[0][1], data[0][3], data[0][5], \
-            data[0][2]], 3, emfo = True, figure = True, \
+            data[0][2]], 4, emfo = True, figure = True, \
             x_label = "arbour diameter", y_label = "aniso score", \
-            z_label = "branching nb", title = "on")
+            z_label = "branching number", title = "on")
 
         clusters_2 = k_clustering([data[1][1], data[1][3], data[1][5], \
-            data[1][2]], 3, emfo = True, figure = True, \
+            data[1][2]], 4, emfo = True, figure = True, \
             x_label = "arbour diameter", y_label = "aniso score", \
-            z_label = "branching nb", title = "off")
+            z_label = "branching number", title = "off")
 
         clusters_3 = k_clustering([data[2][1], data[2][3], data[2][5], \
-            data[2][2]], 3, emfo = True, figure = True, \
+            data[2][2]], 4, emfo = True, figure = True, \
             x_label = "arbour diameter", y_label = "aniso score", \
-            z_label = "branching nb", title = "on-off")
+            z_label = "branching number", title = "on-off")
 
     if pca:
         pca_analysis([output[0], output[1], output[2], output[3]])
