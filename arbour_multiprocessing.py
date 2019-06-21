@@ -19,7 +19,7 @@ def main(fodler):
     # threads_nb processors will run read_file method for each file in file_queue
     output = regroup_data(Pool(threads_nb).map(read_file, enumerate(file_queue)))
 
-    analyse(output, figures = False, clustering = True)
+    analyse(output, figures = True, clustering = False)
 
     print("Execution time:", round(time.time() - start, 2), "sec")
     plt.show()
@@ -101,64 +101,24 @@ def analyse(output, figures = True, clustering = False, pca = False):
         figure_construction(output)
 
     if clustering:
-    #     clusters = k_clustering([output[0], output[1], output[3], output[2]], 5, emfo = True, figure = True, x_label = "terminal distance", y_label = "arbour diameter", z_label = "aniso score")
-        # peak
-        # mean_z_terminal_on = []; mean_z_terminal_off = []
+        clusters = k_clustering([output[0], output[1], output[3], output[2]], 5, emfo = True, figure = True, x_label = "terminal distance", y_label = "arbour diameter", z_label = "aniso score")
 
-        mean_z_terminal_on = []; aniso_sub_on = []; diam_sub_on = []
-        term_dist_sub_on = []; branching_dist_sub_on = []
-        branching_nb_on = []
-
-        mean_z_terminal_off = []; aniso_sub_off = []; diam_sub_off = []
-        term_dist_sub_off = []; branching_dist_sub_off = []
-        branching_nb_off = []
-
-        mean_z_terminal_on_off = []; aniso_sub_on_off = []; diam_sub_on_off = []
-        term_dist_sub_on_off = []; branching_dist_sub_on_off = []
-        branching_nb_on_off = []
-
-        for i in range(0, len(output[5])):
-            type = type_finder(output[5][i])
-
-            if type == "on":
-                term_dist_sub_on.append(output[0][i])
-                diam_sub_on.append(output[1][i])
-                branching_dist_sub_on.append(output[2][i])
-                aniso_sub_on.append(output[3][i])
-                mean_z_terminal_on.append(output[6][i])
-                branching_nb_on.append(output[7][i])
-
-
-            if type == "off":
-                term_dist_sub_off.append(output[0][i])
-                diam_sub_off.append(output[1][i])
-                branching_dist_sub_off.append(output[2][i])
-                aniso_sub_off.append(output[3][i])
-                mean_z_terminal_off.append(output[6][i])
-                branching_nb_off.append(output[7][i])
-
-            if type == "on-off":
-                term_dist_sub_on_off.append(output[0][i])
-                diam_sub_on_off.append(output[1][i])
-                branching_dist_sub_on_off.append(output[2][i])
-                aniso_sub_on_off.append(output[3][i])
-                mean_z_terminal_on_off.append(output[6][i])
-                branching_nb_on_off.append(output[7][i])
-
-        clusters_1 = k_clustering([diam_sub_on, aniso_sub_on, branching_nb_on, \
-            branching_dist_sub_on], 3, emfo = True, figure = True, \
+        # clustering separated by types (on, off, on-off)
+        data = split_by_type(output)
+        clusters_1 = k_clustering([data[0][1], data[0][3], data[0][5], \
+            data[0][2]], 3, emfo = True, figure = True, \
             x_label = "arbour diameter", y_label = "aniso score", \
             z_label = "branching nb", title = "on")
 
-        clusters_2 = k_clustering([diam_sub_off, aniso_sub_off, branching_nb_off, \
-            branching_dist_sub_off], 3, emfo = True, \
-            figure = True, x_label = "arbour diameter", y_label = "aniso score", \
+        clusters_2 = k_clustering([data[1][1], data[1][3], data[1][5], \
+            data[1][2]], 3, emfo = True, figure = True, \
+            x_label = "arbour diameter", y_label = "aniso score", \
             z_label = "branching nb", title = "off")
 
-        clusters_3 = k_clustering([diam_sub_on_off, aniso_sub_on_off, \
-            branching_nb_on_off, branching_dist_sub_on_off], 3, emfo = True, \
-            figure = True, x_label = "arbour diameter", \
-            y_label = "aniso score", z_label = "branching nb", title = "on-off")
+        clusters_3 = k_clustering([data[2][1], data[2][3], data[2][5], \
+            data[2][2]], 3, emfo = True, figure = True, \
+            x_label = "arbour diameter", y_label = "aniso score", \
+            z_label = "branching nb", title = "on-off")
 
         # plt.figure()
         # fig_violin(mean_z_terminal_on, title = "on cells terminal z mean lamination depth")
@@ -298,6 +258,56 @@ def type_finder(peaks):
         return "other"
 
 #--------------------------------------------------------------------------#
+def split_by_type(output):
+    mean_z_terminal_on = []; aniso_sub_on = []; diam_sub_on = []
+    term_dist_sub_on = []; branching_dist_sub_on = []
+    branching_nb_on = []
+
+    mean_z_terminal_off = []; aniso_sub_off = []; diam_sub_off = []
+    term_dist_sub_off = []; branching_dist_sub_off = []
+    branching_nb_off = []
+
+    mean_z_terminal_on_off = []; aniso_sub_on_off = []; diam_sub_on_off = []
+    term_dist_sub_on_off = []; branching_dist_sub_on_off = []
+    branching_nb_on_off = []
+
+    for i in range(0, len(output[5])):
+        type = type_finder(output[5][i])
+
+        if type == "on":
+            term_dist_sub_on.append(output[0][i])
+            diam_sub_on.append(output[1][i])
+            branching_dist_sub_on.append(output[2][i])
+            aniso_sub_on.append(output[3][i])
+            mean_z_terminal_on.append(output[6][i])
+            branching_nb_on.append(output[7][i])
+
+        if type == "off":
+            term_dist_sub_off.append(output[0][i])
+            diam_sub_off.append(output[1][i])
+            branching_dist_sub_off.append(output[2][i])
+            aniso_sub_off.append(output[3][i])
+            mean_z_terminal_off.append(output[6][i])
+            branching_nb_off.append(output[7][i])
+
+        if type == "on-off":
+            term_dist_sub_on_off.append(output[0][i])
+            diam_sub_on_off.append(output[1][i])
+            branching_dist_sub_on_off.append(output[2][i])
+            aniso_sub_on_off.append(output[3][i])
+            mean_z_terminal_on_off.append(output[6][i])
+            branching_nb_on_off.append(output[7][i])
+
+    on = [term_dist_sub_on, diam_sub_on, branching_dist_sub_on, \
+        aniso_sub_on, mean_z_terminal_on, branching_nb_on]
+    off = [term_dist_sub_off, diam_sub_off, branching_dist_sub_off, \
+        aniso_sub_off, mean_z_terminal_off, branching_nb_off]
+    on_off = [term_dist_sub_on_off, diam_sub_on_off, branching_dist_sub_on_off, \
+        aniso_sub_on_off, mean_z_terminal_on_off, branching_nb_on_off]
+
+    return on, off, on_off
+
+#--------------------------------------------------------------------------#
 def regroup_data(tab):
     terminal_dist = []; disc_diam = []; branch_dist = []; aniso = []
     z_coord_distrib = []; peaks = []; z_terminal_coord_distrib = []
@@ -315,10 +325,17 @@ def regroup_data(tab):
 
 #--------------------------------------------------------------------------#
 def figure_construction(tab):
-    # diam = tab[1]; branch = tab[2]; aniso = tab[3]
-    # fig_violin(aniso, title = "anisometry score distribution")
-    # fig_violin(diam, title = "diameter distribution")
-    # fig_violin(branch, title = "branching distance distribution")
+    # fig_violin(tab[1], title = "diameter distribution")
+    # fig_violin(tab[2], title = "branching distance distribution")
+    # fig_violin(tab[3], title = "anisometry score distribution")
+
+    data = split_by_type(tab)
+    all_cells = [tab[0], tab[1], tab[2], tab[3], tab[6], tab[7]]
+    on_cells = data[0]; off_cells = data[1]; on_off_cells = data[2]
+    multiple_fig_violin([all_cells, on_cells, off_cells, on_off_cells], \
+        labels = ["", "all", "", "on", "", "off", "", "on-off"], \
+        titles =  ["terminal distance", "arbour diameter", "branching distance",\
+            "anisometry score", "mean terminal depth", "branching number"])
 
     # z_distrib = tab[4]; peaks = tab[5]
     # z_on = []; z_off = []; z_on_off = []
@@ -397,7 +414,7 @@ def figure_construction(tab):
     #     plt.title("on-off")
     #     fig_violin(mean_strat_depth_on_off, title = "on-off")
 
-    plt.show()
+    # plt.show()
 
     #TODO: other measures plot
     # terminal_dist, disc_diam, branch_dist, aniso, z_coord_distrib, peaks
@@ -421,6 +438,16 @@ def fig_violin(tab, x_label = "", y_label = "", title = ""):
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     ax.set_title(title)
+
+#--------------------------------------------------------------------------#
+def multiple_fig_violin(tab, labels, titles):
+    all_cells = tab[0]; on_cells = tab[1]; off_cells = tab[2]; on_off_cells = tab[3]
+    for i in range(0, len(on_cells)):
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        violin_parts = ax.violinplot([cell_type[i] for cell_type in tab], showmeans = True)
+        ax.set_xticklabels(labels)
+        ax.set_title(titles[i])
 
 #--------------------------------------------------------------------------#
 def fig_plot(multi_tab, x_label = "", y_label = "", title = ""):
