@@ -5,7 +5,7 @@ import numpy as np
 from scipy.signal import find_peaks
 import scipy.cluster.vq as vq
 import matplotlib.pyplot as plt
-from matplotlib.mlab import PCA
+#from matplotlib.mlab import PCA
 from mpl_toolkits.mplot3d import Axes3D
 import scipy.signal as sig
 
@@ -122,8 +122,8 @@ def analyse(output, figures = True, clustering = False, pca = False):
             x_label = "arbour diameter", y_label = "aniso score", \
             z_label = "branching number", title = "on-off")
 
-    if pca:
-        pca_analysis([output[0], output[1], output[2], output[3]])
+#    if pca:
+#        pca_analysis([output[0], output[1], output[2], output[3]])
 
 #--------------------------------------------------------------------------#
 def distance_xd(point1, point2):
