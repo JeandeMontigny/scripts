@@ -11,9 +11,7 @@ def main(fodlers):
     for folder in list_dir:
         temps = extractFolderData(fodlers+folder)
         if temps:
-            label.append(temps[0])
-            mean_area.append(temps[1])
-            std_area.append(temps[2])
+            label.append(temps[0]); mean_area.append(temps[1]); std_area.append(temps[2])
 
     plot(sortData(label, mean_area, std_area))
 
@@ -39,7 +37,6 @@ def readFile(file):
 
     return float(m.group(1))/1e6 if m else 0
 
-
 #--------------------------------------------------------------------------#
 def sortData(label, mean, std):
     # insertion sort
@@ -57,8 +54,7 @@ def sortData(label, mean, std):
 
 #--------------------------------------------------------------------------#
 def plot(data):
-    label = data[0]; mean = data[1]; std = data[2]
-    plt.errorbar(label, mean, std)
+    plt.errorbar(data[0], data[1], data[2])
     plt.xlabel("Postnatal day")
     plt.ylabel("Retinal surface (mm$^2$)")
 
