@@ -34,9 +34,7 @@ def extractFolderData(folder):
 
 #--------------------------------------------------------------------------#
 def readFile(file):
-    file_open = open(file, "r")
-    file_lines = file_open.readlines()
-    file_lines[1]
+    file_lines = open(file, "r").readlines()
     m = re.search(r'1\t([0-9.]+).+', file_lines[1], re.M|re.I)
 
     return float(m.group(1))/1e6 if m else 0
