@@ -102,23 +102,23 @@ def analyse(output, figures = True, clustering = False, pca = False):
 
     if clustering:
         clusters = k_clustering([output[1], output[3], output[7], output[2]], \
-            4, emfo = True, figure = True, x_label = "arbour diameter", \
+            4, emfo = False, figure = True, x_label = "arbour diameter", \
             y_label = "aniso score", z_label = "branching number", title = "all")
 
         # clustering separated by types (on, off, on-off)
         data = split_by_type(output)
         clusters_1 = k_clustering([data[0][1], data[0][3], data[0][5], \
-            data[0][2]], 4, emfo = True, figure = True, \
+            data[0][2]], 4, emfo = False, figure = True, \
             x_label = "arbour diameter", y_label = "aniso score", \
             z_label = "branching number", title = "on")
 
         clusters_2 = k_clustering([data[1][1], data[1][3], data[1][5], \
-            data[1][2]], 4, emfo = True, figure = True, \
+            data[1][2]], 4, emfo = False, figure = True, \
             x_label = "arbour diameter", y_label = "aniso score", \
             z_label = "branching number", title = "off")
 
         clusters_3 = k_clustering([data[2][1], data[2][3], data[2][5], \
-            data[2][2]], 4, emfo = True, figure = True, \
+            data[2][2]], 4, emfo = False, figure = True, \
             x_label = "arbour diameter", y_label = "aniso score", \
             z_label = "branching number", title = "on-off")
 
@@ -241,19 +241,19 @@ def peak_detector(z_distrib, width_value = 3, plot = False):
 def type_finder(peaks):
     # if just one lamination peak
     if len(peaks) == 1:
-        return "on" if peaks < 50 else "off"
+        return "on" if peaks < 42 else "off"
     # if distance between peaks is higher to be two lamination levels
     elif np.amax(peaks) - np.amin(peaks) >= 20:
         return "on-off"
-    elif np.amin(peaks) < 50:
+    elif np.amin(peaks) < 42:
         return "on"
-    elif np.amax(peaks) >= 50:
+    elif np.amax(peaks) >= 42:
         return "off"
     else:
         return "other"
 
 #--------------------------------------------------------------------------#
-def split_by_type(output):
+def split_by_type(output, print_types_nb = False):
     mean_z_terminal_on = []; aniso_sub_on = []; diam_sub_on = []
     term_dist_sub_on = []; branching_dist_sub_on = []
     branching_nb_on = []
@@ -289,6 +289,9 @@ def split_by_type(output):
             aniso_sub_on_off.append(output[3][i])
             mean_z_terminal_on_off.append(output[6][i])
             branching_nb_on_off.append(output[7][i])
+
+    if print_types_nb:
+        print(len(term_dist_sub_on), "on cells,", len(term_dist_sub_off), "off cells,", len(term_dist_sub_on_off), "on-off cells" )
 
     on = [term_dist_sub_on, diam_sub_on, branching_dist_sub_on, \
         aniso_sub_on, mean_z_terminal_on, branching_nb_on]
