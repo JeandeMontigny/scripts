@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 #--------------------------------------------------------------------------#
 def main(surface_folders, density_folders):
-    label = []; global_cell_nb_ave = []; global_cell_nb_std = []
+    label = []; global_cell_nb_ave = []; global_cell_nb_std = []; cell_pop_list = []
     # get folder corresponding to the same day for surface and density
     for surface_day in os.listdir(surface_folders):
         for density_day in os.listdir(density_folders):
@@ -21,10 +21,16 @@ def main(surface_folders, density_folders):
                         day_global_cell_nb.append(ret_density*ret_surface_list[i])
 
                 label.append(int(density_day[1:]))
+                cell_pop_list.append(day_global_cell_nb)
                 global_cell_nb_ave.append(np.average(day_global_cell_nb))
                 global_cell_nb_std.append(np.std(day_global_cell_nb))
 
-    plot(sortData(label, global_cell_nb_ave, global_cell_nb_std))
+    # hard copy to avoid referenced copy
+    unsorted_label = label.copy()
+    plot(sortData(label, global_cell_nb_ave, global_cell_nb_std), "Postnatal day", "Estimated cell population")
+    apoptosePlot(sortBis(unsorted_label, cell_pop_list))
+
+    plt.show()
 
     return 1
 
@@ -80,12 +86,52 @@ def sortData(label, mean, std):
     return label, mean, std
 
 #--------------------------------------------------------------------------#
-def plot(data):
-    plt.errorbar(data[0], data[1], data[2])
-    plt.xlabel("Postnatal day")
-    plt.ylabel("Estimated cell population")
+def sortBis(label, pop_list):
+    i = 1
+    while i < len(label):
+        j = i
+        while j > 0 and label[j-1] > label[j]:
+            label[j], label[j-1] = label[j-1], label[j]
+            pop_list[j], pop_list[j-1] = pop_list[j-1], pop_list[j]
+            j = j-1
+        i = i+1
 
-    plt.show()
+    return label, pop_list
+
+#--------------------------------------------------------------------------#
+def plot(data, x_label, y_label):
+    plt.figure()
+    plt.errorbar(data[0], data[1], data[2])
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+
+#--------------------------------------------------------------------------#
+def apoptosePlot(data):
+    cell_pop_list = data[1]
+    estimated_apoptose = []; estimated_apoptose_std = []
+    # for each development day
+    for i in range(1, len(cell_pop_list)):
+        day_temps = []
+        # for each population measure of day x+1
+        for j in range(0, len(cell_pop_list[i])):
+            # for each population measure of day x
+            for k in range(0, len(cell_pop_list[i-1])):
+                # measure j day x+1 - measure k day x
+                estimated_apo = cell_pop_list[i][j] - cell_pop_list[i-1][k]
+                day_temps.append(estimated_apo)
+
+        estimated_apoptose.append(np.average(day_temps))
+        estimated_apoptose_std.append(np.std(day_temps))
+
+
+    cumulative_death = []; cumulative_death_std = []
+    max_val = max(estimated_apoptose); min_val = min(estimated_apoptose)
+    for i in range(0, len(estimated_apoptose)):
+        cumulative_death.append(100*(estimated_apoptose[i] - min_val) / (max_val - min_val))
+        cumulative_death_std.append(100*(estimated_apoptose_std[i] - max_val) / (min_val - max_val))
+
+    plot([data[0][:-1], estimated_apoptose, estimated_apoptose_std], "Postnatal day", "Estimated apoptosis")
+    plot([data[0][:-1], cumulative_death, cumulative_death_std], "Postnatal day", "Cumulative apoptosis (%)")
 
 #--------------------------------------------------------------------------#
 # check number of arguments
