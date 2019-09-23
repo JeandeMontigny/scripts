@@ -7,17 +7,16 @@ import matplotlib.pyplot as plt
 def main(surface_folders, density_folders):
     label = []; global_cell_nb_ave = []; global_cell_nb_std = []
     # get folder corresponding to the same day for surface and density
-    
     for surface_day in os.listdir(surface_folders):
         for density_day in os.listdir(density_folders):
             if density_day == surface_day:
                 day_global_cell_nb = []
-                temps = getSurface(surface_folders+surface_day)
-                ret_surface_list = temps[0]
-                retina_list = temps[1]
-
+                # extract surface and name for each retina of this day
+                temps = getSurface(surface_folders+surface_day); ret_surface_list = temps[0]; retina_list = temps[1]
+                # for each whole mount retina of this dev day
                 for i in range(0, len(retina_list)-1):
                     ret_density = getDensity(density_folders+density_day, retina_list[i])
+                    # if this whole mount retina had density measures
                     if ret_density > 0:
                         day_global_cell_nb.append(ret_density*ret_surface_list[i])
 
@@ -47,21 +46,23 @@ def getSurface(folder):
 
 #--------------------------------------------------------------------------#
 def getDensity(folder, retina):
-    nb_of_cells = 0; nb_of_files = 0
+    nb_of_cells = 0
+    # get all RGC cell position files, corresponding only to this precise whole mount retina 
     files = [f for f in os.listdir(folder) if f.endswith("RGC.txt") and f.startswith(retina)]
+    # if no cell position corresponsing to this retina, return
     if len(files) == 0:
         return 0
+    # for each cell position file of files list
     for coord_file in files:
-        nb_of_files += 1
         file_lines = open(folder+"/"+coord_file, "r").readlines()
         for line in file_lines:
             if line[0] != " ":
-            # file strucure: index Area Mean Min Max X Y
+                # file strucure: index Area Mean Min Max X Y
                 m = re.search( r'[0-9.]+\t[0-9.]+\t[0-9.]+\t[0-9.]+\t[0-9.]+\t([0-9.]+)\t([0-9.]+)', line, re.M|re.I)
                 if m :
                     nb_of_cells += 1
     # return average number of cell for this retina
-    return ((nb_of_cells / (335.4*335.4)) * 10e5)/nb_of_files
+    return ((nb_of_cells / (335.4*335.4)) * 10e5)/len(files)
 
 #--------------------------------------------------------------------------#
 def sortData(label, mean, std):
