@@ -46,9 +46,15 @@ def delaunay(positions_list):
                 seg_done.append(seg)
 
     plt.figure()
-    plt.hist(seg_length, bins=int(len(seg_length)/10), density=True, cumulative=True, histtype='step')
-    plt.xlim(0, max(seg_length)-1)
-    plt.title("delaunay triangulation segment length cumulative density")
+    n = plt.hist(seg_length, bins=int(len(seg_length)/10), density=False, cumulative=False, histtype='bar')
+    plt.title("Delaunay triangulation segment length distribution")
+
+    density = []
+    for i in range(0, len(n[0])-1):
+        density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
+    plt.figure()
+    plt.plot(density/sum(n[0]))
+    plt.title("Delaunay triangulation segment length cumulative density")
 
 #--------------------------------------------------------------------------#
 def segDone(new_seg, seg_list):
