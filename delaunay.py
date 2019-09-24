@@ -21,7 +21,7 @@ def read(coord_file):
     cells_position = []
     file_lines = open(coord_file, "r").readlines()
     for line in file_lines:
-        m = re.search(r'([0-9.]+)\ ([0-9.]+)\ ([0-9.]+)', line, re.M|re.I)
+        m = re.search(r'([0-9.]+)\ ([0-9.]+)\ *[0-9.]*\n', line, re.M|re.I)
         if m:
             cells_position.append([float(m.group(1)), float(m.group(2))])
 
@@ -46,8 +46,9 @@ def delaunay(positions_list):
                 seg_done.append(seg)
 
     plt.figure()
-    plt.hist(seg_length)
-    plt.title("delaunay triangulation segment length distribution")
+    plt.hist(seg_length, bins=int(len(seg_length)/10), density=True, cumulative=True, histtype='step')
+    plt.xlim(0, max(seg_length)-1)
+    plt.title("delaunay triangulation segment length cumulative density")
 
 #--------------------------------------------------------------------------#
 def segDone(new_seg, seg_list):
@@ -77,4 +78,4 @@ if len(sys.argv)==2:
     else:
         print("error during execution")
 else:
-    raise SystemExit('Error: need 1 arg: [surface meta folder] [density meta folder]')
+    raise SystemExit('Error: need 1 arg: [cells coordinates file]')
