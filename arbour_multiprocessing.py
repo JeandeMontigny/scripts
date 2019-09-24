@@ -122,6 +122,7 @@ def analyse(output, figures = True, clustering = False, pca = False):
             x_label = "arbour diameter", y_label = "aniso score", \
             z_label = "branching number", title = "on-off")
 
+#TODO: find new PCA module
 #    if pca:
 #        pca_analysis([output[0], output[1], output[2], output[3]])
 
@@ -241,13 +242,13 @@ def peak_detector(z_distrib, width_value = 3, plot = False):
 def type_finder(peaks):
     # if just one lamination peak
     if len(peaks) == 1:
-        return "on" if peaks < 42 else "off"
+        return "on" if peaks < 42 else "off" # 50
     # if distance between peaks is higher to be two lamination levels
     elif np.amax(peaks) - np.amin(peaks) >= 20:
         return "on-off"
-    elif np.amin(peaks) < 42:
+    elif np.amin(peaks) < 42: # 50
         return "on"
-    elif np.amax(peaks) >= 42:
+    elif np.amax(peaks) >= 42: # 50
         return "off"
     else:
         return "other"
