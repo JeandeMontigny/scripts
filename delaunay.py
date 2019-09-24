@@ -7,10 +7,13 @@ import matplotlib.pyplot as plt
 #--------------------------------------------------------------------------#
 def main(coord_file):
 
+    #TODO: from regular mosaic to random. Each mosaic on the same measure plot
+
     cells_position = read(coord_file)
 
-#    delaunay(cells_position)
+    delaunay(cells_position)
     voronoi(cells_position)
+    ri(cells_position)
 
     plt.show()
 
@@ -47,7 +50,7 @@ def delaunay(positions_list):
 
     # delaunay segment length density distribution
     plt.figure()
-    n = plt.hist(seg_length, bins=int(len(seg_length)/10), density=True, cumulative=False, histtype='bar')
+    n = plt.hist(np.sort(seg_length)[:int(len(seg_length)-len(seg_length)*0.05)], bins=int(len(seg_length)/40), density=True, cumulative=False, histtype='bar')
     plt.title("Delaunay triangulation segment length density distribution")
 
     # delaunay segment length cumulative density
@@ -79,13 +82,15 @@ def voronoi(positions_list):
     # voro.regions: index of vertices points composing regions. closed region if no -1 index
     ss.voronoi_plot_2d(voro)
 
-    areas_list = []
+    # calculate areas and angles of every internal domains
+    areas_list = []; angles_list = []
     for region in voro.regions:
-        # if region doesn't have point outside, ie ignore non closed domains (border domains)
+        # if region doesn't have point outside. ignore non closed domains (border domains), avoid border effect
         if -1 not in region:
             domain_points = []
             for index in region:
                 domain_points.append(list(voro.vertices[index]))
+            angles_list.append(polygoneAngles(domain_points))
             areas_list.append(polygoneArea(domain_points))
 
     # voronoi area density distribution
@@ -102,9 +107,42 @@ def voronoi(positions_list):
     plt.title("Voronoi domains area cumulative density")
 
     # voronoi angles distribution
+    angles = []
+    for angle_sub_list in angles_list:
+        for angle in angle_sub_list:
+            angles.append(np.degrees(angle))
+    plt.figure()
+    n = plt.hist(angles, bins=int(len(angles)/100), density=True, cumulative=False, histtype='bar')
+    plt.title("Voronoi domains angle density distribution")
 
     # voronoi angles cumulative density
+    density = []
+    for i in range(0, len(n[0])-1):
+        density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
+    plt.figure()
+    plt.plot(density/sum(n[0]))
+    plt.title("Voronoi domains angle cumulative density")
 
+#--------------------------------------------------------------------------#
+def polygoneAngles(points_coord):
+    angle_list = []
+    for i in range(0, len(points_coord)):
+        if i == 0:
+            angle_list.append(getAngle(points_coord[i+1], points_coord[i], points_coord[len(points_coord)-1]))
+        elif i == len(points_coord)-1:
+            angle_list.append(getAngle(points_coord[0], points_coord[i], points_coord[i-1]))
+        else:
+             angle_list.append(getAngle(points_coord[i+1], points_coord[i], points_coord[i-1]))
+
+    return angle_list
+
+#--------------------------------------------------------------------------#
+def getAngle(b, a, c):
+    angle = (np.square(dist([a, b])) + np.square(dist([a, c])) - np.square(dist([b, c]))) / (2 * dist([a, b]) * dist([a, c]))
+    if angle < -1:
+        angle = -1
+
+    return np.arccos(angle)
 
 #--------------------------------------------------------------------------#
 def polygoneArea(points_coord):
@@ -114,6 +152,12 @@ def polygoneArea(points_coord):
         y.append(coord[1])
 
     return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))
+
+#--------------------------------------------------------------------------#
+#TODO
+def ri(positions_list):
+
+    return
 
 #--------------------------------------------------------------------------#
 # check number of arguments
