@@ -6,14 +6,14 @@ import matplotlib.pyplot as plt
 
 #--------------------------------------------------------------------------#
 def main(coord_file):
-
     #TODO: from regular mosaic to random. Each mosaic on the same measure plot
+    #TODO: directly save pictures
 
     cells_position = read(coord_file)
 
     delaunay(cells_position)
     voronoi(cells_position)
-    ri(cells_position)
+    print(ri(cells_position))
 
     plt.show()
 
@@ -154,10 +154,26 @@ def polygoneArea(points_coord):
     return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))
 
 #--------------------------------------------------------------------------#
-#TODO
 def ri(positions_list):
+    shortest_dist_list = getShortestDistList(positions_list)
 
-    return
+    return round((np.average(shortest_dist_list)/np.std(shortest_dist_list)), 2)
+
+#--------------------------------------------------------------------------#
+def getShortestDistList(coord_list):
+    shortest_dist_list = []
+    for i in range(0, len(coord_list)):
+        distance_list = []
+        cell_coord = coord_list[i]
+        for j in range(0, len(coord_list)):
+            other_cell_coord = coord_list[j]
+            tempsDistance = np.sqrt(np.square(cell_coord[0] - other_cell_coord[0]) + np.square(cell_coord[1] - other_cell_coord[1]))
+            # if cell is not itself
+            if tempsDistance != 0:
+                distance_list.append(tempsDistance)
+        # add shortest distance
+        shortest_dist_list.append(min(distance_list))
+    return shortest_dist_list
 
 #--------------------------------------------------------------------------#
 # check number of arguments
