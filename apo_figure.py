@@ -32,6 +32,13 @@ def main():
     sac_inl_ri = [np.nan, np.nan, np.nan, 4.12, 4.35, 4.33, 4.51, 4.51, 4.36]
     sac_inl_ri_std = [np.nan, np.nan, np.nan, 0.51, 0.44, 0.37, 0.39, 0.46, 0.66]
 
+
+#    rgc_thickness = [0.1184, 0.1129, 0.1053, 0.1058, 0.0893, 0.0936, 0.0950]
+#    rgc_thickness_std = [0.0070, 0.0078, 0.0070, 0.0056, 0.0066, 0.0125, 0.0105]
+
+#    rgc_diam = [7.36, 8.01, 9.86, 10.98, 11.88, 12.43, 12.43]
+#    rgc_diam_std = [0.67, 0.73, 0.53, 0.58, 0.37, 0.20, 0.67]
+
     createFigure(dev_days, rgc_nb, rgc_nb_std, "Postnatal day", "Cell density", "RGC density during development")
     createFigure(dev_days, rgc_ri, rgc_ri_std, "Postnatal day", "RI", "RGC Regularity Index during development")
 
