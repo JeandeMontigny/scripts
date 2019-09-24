@@ -1,23 +1,56 @@
 #!/usr/bin/env python3
 import sys, os, re
 import numpy as np
+import random as rd
 import scipy.spatial as ss
 import matplotlib.pyplot as plt
 
 #--------------------------------------------------------------------------#
-def main(coord_file):
-    #TODO: from regular mosaic to random. Each mosaic on the same measure plot
-    #TODO: directly save pictures
+def main(folder):
+    create_mosaics = False
+    if create_mosaics:
+        for rand in range(1, 10):
+            mosaic_creation(folder, rand/10)
 
-    cells_position = read(coord_file)
+    delau_list = []; voro_list = []; ri_list = []; random_weight_list = []
 
-    delaunay(cells_position)
-    voronoi(cells_position)
-    print(ri(cells_position))
+    for coord_file in [file for file in os.listdir(folder) if file.endswith(".txt")]:
+        random_weight = coord_file[len(coord_file)-7:len(coord_file)-4] if coord_file[len(coord_file)-6] == '.' else coord_file[len(coord_file)-5:len(coord_file)-4]
+        random_weight_list.append(float(random_weight))
 
-    plt.show()
+        # read file
+        cells_position = read(folder+coord_file)
+
+        # data analyse
+        delau_list.append(delaunay(folder, cells_position, random_weight))
+        voro_list.append(voronoi(folder, cells_position, random_weight))
+        ri_list.append(ri(cells_position))
+
+    random_weight_list, delau_list, voro_list, ri_list = sortData(random_weight_list, delau_list, voro_list, ri_list)
+
+    delauPlot(folder, random_weight_list, delau_list)
+    voroPlot(folder, random_weight_list, voro_list)
+    riPlot(folder, random_weight_list, ri_list)
 
     return 1
+
+#--------------------------------------------------------------------------#
+def mosaic_creation(output_folder, weight):
+    if float(weight) > 1 or float(weight) < 0:
+        SystemExit('random weigh should be between 0 and 1')
+    cell_per_dim = 20
+    cells_space = 25
+    rand = float(weight) * cells_space
+
+    if os.path.isfile(output_folder+"mosaic_"+str(cell_per_dim*cell_per_dim)+"cells_"+str(weight)+".txt"):
+        os.remove(output_folder+"mosaic_"+str(cell_per_dim*cell_per_dim)+"cells_"+str(weight)+".txt")
+    output_file=open(output_folder+"mosaic_"+str(cell_per_dim*cell_per_dim)+"cells_"+str(weight)+".txt", "a")
+
+    for i in range(0, cell_per_dim):
+        for j in range(0, cell_per_dim):
+            position = str( round(rd.uniform(-rand, rand), 2)+(i*cells_space) ) + " " + str( round(rd.uniform(-rand, rand), 2)+(j*cells_space) ) + "\n"
+            output_file.write(position)
+    output_file.close()
 
 #--------------------------------------------------------------------------#
 def read(coord_file):
@@ -31,8 +64,10 @@ def read(coord_file):
     return cells_position
 
 #--------------------------------------------------------------------------#
-def delaunay(positions_list):
+def delaunay(output_folder, positions_list, random_weight):
     tri = ss.Delaunay(positions_list, qhull_options="QJ")
+
+    return tri
 
     plt.figure()
     plt.triplot(tri.points[:,0], tri.points[:,1], tri.simplices)
@@ -52,6 +87,7 @@ def delaunay(positions_list):
     plt.figure()
     n = plt.hist(np.sort(seg_length)[:int(len(seg_length)-len(seg_length)*0.05)], bins=int(len(seg_length)/40), density=True, cumulative=False, histtype='bar')
     plt.title("Delaunay triangulation segment length density distribution")
+    plt.savefig(output_folder+"delau_seg_distrib_"+random_weight+".png")
 
     # delaunay segment length cumulative density
     density = []
@@ -60,6 +96,7 @@ def delaunay(positions_list):
     plt.figure()
     plt.plot(density/sum(n[0]))
     plt.title("Delaunay triangulation segment length cumulative density")
+    plt.savefig(output_folder+"delau_seg_cumul_"+random_weight+".png")
 
 #--------------------------------------------------------------------------#
 def segDone(new_seg, seg_list):
@@ -74,8 +111,11 @@ def dist(points):
     return round(np.sqrt(np.square(points[0][0] - points[1][0]) + np.square(points[0][1] - points[1][1])), 2)
 
 #--------------------------------------------------------------------------#
-def voronoi(positions_list):
+def voronoi(output_folder, positions_list, random_weight):
     voro = ss.Voronoi(positions_list, qhull_options="Qc")
+
+    return voro
+
     # voro.vertices: delaunays circles centers
     # voro.ridge_points: index of voro.vertices points couple forming lines
     # voro.ridge_vertices: index of voro.vertices points couple forming lines, including outside of region as -1
@@ -97,6 +137,7 @@ def voronoi(positions_list):
     plt.figure()
     n = plt.hist(np.sort(areas_list)[:int(len(areas_list)-len(areas_list)*0.1)], bins=int(len(areas_list)/10), density=True, cumulative=False, histtype='bar')
     plt.title("Voronoi domains area density distribution")
+    plt.savefig(output_folder+"voro_area_distrib_"+random_weight+".png")
 
     # voronoi area cumulative density
     density = []
@@ -105,6 +146,7 @@ def voronoi(positions_list):
     plt.figure()
     plt.plot(density/sum(n[0]))
     plt.title("Voronoi domains area cumulative density")
+    plt.savefig(output_folder+"voro_area_cumul_"+random_weight+".png")
 
     # voronoi angles distribution
     angles = []
@@ -114,6 +156,7 @@ def voronoi(positions_list):
     plt.figure()
     n = plt.hist(angles, bins=int(len(angles)/100), density=True, cumulative=False, histtype='bar')
     plt.title("Voronoi domains angle density distribution")
+    plt.savefig(output_folder+"voro_angle_distrib_"+random_weight+".png")
 
     # voronoi angles cumulative density
     density = []
@@ -122,6 +165,7 @@ def voronoi(positions_list):
     plt.figure()
     plt.plot(density/sum(n[0]))
     plt.title("Voronoi domains angle cumulative density")
+    plt.savefig(output_folder+"voro_angle_cumul_"+random_weight+".png")
 
 #--------------------------------------------------------------------------#
 def polygoneAngles(points_coord):
@@ -141,6 +185,8 @@ def getAngle(b, a, c):
     angle = (np.square(dist([a, b])) + np.square(dist([a, c])) - np.square(dist([b, c]))) / (2 * dist([a, b]) * dist([a, c]))
     if angle < -1:
         angle = -1
+    if angle > 1:
+        angle = 1
 
     return np.arccos(angle)
 
@@ -173,7 +219,112 @@ def getShortestDistList(coord_list):
                 distance_list.append(tempsDistance)
         # add shortest distance
         shortest_dist_list.append(min(distance_list))
+
     return shortest_dist_list
+
+#--------------------------------------------------------------------------#
+def sortData(label, a, b, c):
+    # insertion sort
+    i = 1
+    while i < len(label):
+        j = i
+        while j > 0 and label[j-1] > label[j]:
+            label[j], label[j-1] = label[j-1], label[j]
+            a[j], a[j-1] = a[j-1], a[j]
+            b[j], b[j-1] = b[j-1], b[j]
+            c[j], c[j-1] = c[j-1], c[j]
+            j = j-1
+        i = i+1
+
+    return label, a, b, c
+
+#--------------------------------------------------------------------------#
+def delauPlot(folder, random_weight_list, delau_list):
+    fig1 = plt.figure(); ax1=fig1.add_subplot(111)
+    fig2 = plt.figure(); ax2=fig2.add_subplot(111)
+    for tri_index in range(0, len(delau_list)):
+        tri = delau_list[tri_index]
+        seg_length = []; seg_done = []
+        # simplices: index of tri.points points forming triangles
+        for triangle in tri.simplices:
+            segments = [[tri.points[triangle[0]], tri.points[triangle[1]]], [tri.points[triangle[0]], tri.points[triangle[2]]], [tri.points[triangle[1]], tri.points[triangle[2]]]]
+            for seg in segments:
+                if not segDone(seg, seg_done):
+                    seg_length.append(dist(seg))
+                    seg_done.append(seg)
+
+        # delaunay segment length density distribution
+        n = ax1.hist(np.sort(seg_length)[:int(len(seg_length)-len(seg_length)*0.05)], bins=int(len(seg_length)/40), density=True, cumulative=False, histtype='bar')
+
+        # delaunay segment length cumulative density
+        density = []
+        for i in range(0, len(n[0])-1):
+            density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
+        ax2.plot(density/sum(n[0]), label=str(random_weight_list[tri_index]))
+
+    ax1.set_title("Delaunay triangulation segment length density distribution")
+    ax1.get_figure().savefig(folder+"delau_seg_distrib_vs_rand.png")
+
+    ax2.set_title("Delaunay triangulation segment length cumulative density")
+    ax2.legend()
+    ax2.get_figure().savefig(folder+"delau_seg_cumul_vs_rand.png")
+
+#--------------------------------------------------------------------------#
+def voroPlot(folder, random_weight_list, voro_list):
+    fig1 = plt.figure(); ax1=fig1.add_subplot(111)
+    fig2 = plt.figure(); ax2=fig2.add_subplot(111)
+    fig3 = plt.figure(); ax3=fig3.add_subplot(111)
+    fig4 = plt.figure(); ax4=fig4.add_subplot(111)
+    for voro_index in range(0, len(voro_list)):
+        areas_list = []; angles_list = []
+        voro = voro_list[voro_index]
+        for region in voro.regions:
+            # if region doesn't have point outside. ignore non closed domains (border domains), avoid border effect
+            if -1 not in region:
+                domain_points = []
+                for index in region:
+                    domain_points.append(list(voro.vertices[index]))
+                angles_list.append(polygoneAngles(domain_points))
+                areas_list.append(polygoneArea(domain_points))
+        # voronoi area density distribution
+        n = ax1.hist(np.sort(areas_list)[:int(len(areas_list)-len(areas_list)*0.1)], bins=int(len(areas_list)/10), density=True, cumulative=False, histtype='bar')
+        # voronoi area cumulative density
+        density = []
+        for i in range(0, len(n[0])-1):
+            density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
+        ax2.plot(density/sum(n[0]), label=str(random_weight_list[voro_index]))
+        # voronoi angles distribution
+        angles = []
+        for angle_sub_list in angles_list:
+            for angle in angle_sub_list:
+                angles.append(np.degrees(angle))
+        n = ax3.hist(angles, bins=int(len(angles)/100), density=True, cumulative=False, histtype='bar')
+        # voronoi angles cumulative density
+        density = []
+        for i in range(0, len(n[0])-1):
+            density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
+        ax4.plot(density/sum(n[0]), label=str(random_weight_list[voro_index]))
+
+    ax1.set_title("Voronoi domains area density distribution")
+    ax1.get_figure().savefig(folder+"voro_area_distrib_vs_rand.png")
+
+    ax2.set_title("Voronoi domains area cumulative density")
+    ax2.legend()
+    ax2.get_figure().savefig(folder+"voro_area_cumul_vs_rand.png")
+
+    ax3.set_title("Voronoi domains angles density distribution")
+    ax3.get_figure().savefig(folder+"voro_angle_distrib_vs_rand.png")
+
+    ax4.set_title("Voronoi domains angles cumulative density")
+    ax4.legend()
+    ax4.get_figure().savefig(folder+"voro_angle_cumul_vs_rand.png")
+
+#--------------------------------------------------------------------------#
+def riPlot(folder, random_weight_list, ri):
+    plt.figure()
+    plt.plot(random_weight_list, ri)
+    plt.title("RI measure depending on randomness weight for mosaic creation")
+    plt.savefig(folder+"ri_vs_random.png")
 
 #--------------------------------------------------------------------------#
 # check number of arguments
@@ -183,4 +334,4 @@ if len(sys.argv)==2:
     else:
         print("error during execution")
 else:
-    raise SystemExit('Error: need 1 arg: [cells coordinates file]')
+    raise SystemExit('Error: need 2 arg: [input-output folder]')
