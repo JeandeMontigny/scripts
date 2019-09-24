@@ -9,7 +9,7 @@ def main(coord_file):
 
     cells_position = read(coord_file)
 
-    delaunay(cells_position)
+#    delaunay(cells_position)
     voronoi(cells_position)
 
     plt.show()
@@ -45,10 +45,12 @@ def delaunay(positions_list):
                 seg_length.append(dist(seg))
                 seg_done.append(seg)
 
+    # delaunay segment length density distribution
     plt.figure()
-    n = plt.hist(seg_length, bins=int(len(seg_length)/10), density=False, cumulative=False, histtype='bar')
-    plt.title("Delaunay triangulation segment length distribution")
+    n = plt.hist(seg_length, bins=int(len(seg_length)/10), density=True, cumulative=False, histtype='bar')
+    plt.title("Delaunay triangulation segment length density distribution")
 
+    # delaunay segment length cumulative density
     density = []
     for i in range(0, len(n[0])-1):
         density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
@@ -70,11 +72,48 @@ def dist(points):
 
 #--------------------------------------------------------------------------#
 def voronoi(positions_list):
-    voro = ss.Voronoi(positions_list)
-
+    voro = ss.Voronoi(positions_list, qhull_options="Qc")
+    # voro.vertices: delaunays circles centers
+    # voro.ridge_points: index of voro.vertices points couple forming lines
+    # voro.ridge_vertices: index of voro.vertices points couple forming lines, including outside of region as -1
+    # voro.regions: index of vertices points composing regions. closed region if no -1 index
     ss.voronoi_plot_2d(voro)
 
-    # voronoi domain size distribution
+    areas_list = []
+    for region in voro.regions:
+        # if region doesn't have point outside, ie ignore non closed domains (border domains)
+        if -1 not in region:
+            domain_points = []
+            for index in region:
+                domain_points.append(list(voro.vertices[index]))
+            areas_list.append(polygoneArea(domain_points))
+
+    # voronoi area density distribution
+    plt.figure()
+    n = plt.hist(np.sort(areas_list)[:int(len(areas_list)-len(areas_list)*0.1)], bins=int(len(areas_list)/10), density=True, cumulative=False, histtype='bar')
+    plt.title("Voronoi domains area density distribution")
+
+    # voronoi area cumulative density
+    density = []
+    for i in range(0, len(n[0])-1):
+        density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
+    plt.figure()
+    plt.plot(density/sum(n[0]))
+    plt.title("Voronoi domains area cumulative density")
+
+    # voronoi angles distribution
+
+    # voronoi angles cumulative density
+
+
+#--------------------------------------------------------------------------#
+def polygoneArea(points_coord):
+    x = []; y = []
+    for coord in points_coord:
+        x.append(coord[0])
+        y.append(coord[1])
+
+    return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))
 
 #--------------------------------------------------------------------------#
 # check number of arguments
