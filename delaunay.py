@@ -54,10 +54,11 @@ def delaunay(positions_list):
 
     # delaunay segment length cumulative density
     density = []
-    for i in range(0, len(n[0])-1):
+    for i in range(0, len(n[0])):
         density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
     plt.figure()
     plt.plot(density/sum(n[0]))
+    #TODO: x axis is from min(n) to max(n), not from 0 to len(n)!
     plt.title("Delaunay triangulation segment length cumulative density")
 
 #--------------------------------------------------------------------------#
@@ -100,10 +101,11 @@ def voronoi(positions_list):
 
     # voronoi area cumulative density
     density = []
-    for i in range(0, len(n[0])-1):
+    for i in range(0, len(n[0])):
         density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
     plt.figure()
     plt.plot(density/sum(n[0]))
+    #TODO: x axis is from min(n) to max(n), not from 0 to len(n)!
     plt.title("Voronoi domains area cumulative density")
 
     # voronoi angles distribution
@@ -117,10 +119,11 @@ def voronoi(positions_list):
 
     # voronoi angles cumulative density
     density = []
-    for i in range(0, len(n[0])-1):
+    for i in range(0, len(n[0])):
         density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
     plt.figure()
     plt.plot(density/sum(n[0]))
+    #TODO: x axis is from min(n) to max(n), not from 0 to len(n)!
     plt.title("Voronoi domains angle cumulative density")
 
 #--------------------------------------------------------------------------#
@@ -166,11 +169,14 @@ def ri(positions_list):
     n = plt.hist(dist_list, density=True)
     plt.title("Cells distances density distribution")
 
+    #TODO: closest dist distribution (and cumulative distribution). just plot hist(shortest_dist_list) and its cumulative
+
     density = []
-    for i in range(0, len(n[0])-1):
+    for i in range(0, len(n[0])):
         density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
     plt.figure()
     plt.plot(density/sum(n[0]))
+    #TODO: x axis is from min(n) to max(n), not from 0 to len(n)!
     plt.title("Cells distances cumulative density")
 
 #--------------------------------------------------------------------------#
