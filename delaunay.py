@@ -57,7 +57,7 @@ def delaunay(positions_list):
     for i in range(0, len(n[0])):
         density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
     plt.figure()
-    plt.plot(density/sum(n[0]))
+    plt.plot(n[1][:len(n[1])-1], density/sum(n[0]))
     #TODO: x axis is from min(n) to max(n), not from 0 to len(n)!
     plt.title("Delaunay triangulation segment length cumulative density")
 
@@ -104,7 +104,7 @@ def voronoi(positions_list):
     for i in range(0, len(n[0])):
         density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
     plt.figure()
-    plt.plot(density/sum(n[0]))
+    plt.plot(n[1][:len(n[1])-1], density/sum(n[0]))
     #TODO: x axis is from min(n) to max(n), not from 0 to len(n)!
     plt.title("Voronoi domains area cumulative density")
 
@@ -122,7 +122,7 @@ def voronoi(positions_list):
     for i in range(0, len(n[0])):
         density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
     plt.figure()
-    plt.plot(density/sum(n[0]))
+    plt.plot(n[1][:len(n[1])-1], density/sum(n[0]))
     #TODO: x axis is from min(n) to max(n), not from 0 to len(n)!
     plt.title("Voronoi domains angle cumulative density")
 
@@ -175,7 +175,7 @@ def ri(positions_list):
     for i in range(0, len(n[0])):
         density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
     plt.figure()
-    plt.plot(density/sum(n[0]))
+    plt.plot(n[1][:len(n[1])-1], density/sum(n[0]))
     #TODO: x axis is from min(n) to max(n), not from 0 to len(n)!
     plt.title("Cells distances cumulative density")
 
