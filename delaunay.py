@@ -12,7 +12,7 @@ def main(coord_file):
 
     delaunay(cells_position)
     voronoi(cells_position)
-    print(ri(cells_position))
+    ri(cells_position)
 
     plt.show()
 
@@ -157,13 +157,25 @@ def polygoneArea(points_coord):
 
 #--------------------------------------------------------------------------#
 def ri(positions_list):
-    shortest_dist_list = getShortestDistList(positions_list)
+    shortest_dist_list, dist_list = getDistLists(positions_list)
 
-    return round((np.average(shortest_dist_list)/np.std(shortest_dist_list)), 2)
+    # print ri value
+    print(round((np.average(shortest_dist_list)/np.std(shortest_dist_list)), 2))
+
+    plt.figure()
+    n = plt.hist(dist_list, density=True)
+    plt.title("Cells distances density distribution")
+
+    density = []
+    for i in range(0, len(n[0])-1):
+        density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
+    plt.figure()
+    plt.plot(density/sum(n[0]))
+    plt.title("Cells distances cumulative density")
 
 #--------------------------------------------------------------------------#
-def getShortestDistList(coord_list):
-    shortest_dist_list = []
+def getDistLists(coord_list):
+    shortest_dist_list = []; dist_list = []
     for i in range(0, len(coord_list)):
         distance_list = []
         cell_coord = coord_list[i]
@@ -173,10 +185,11 @@ def getShortestDistList(coord_list):
             # if cell is not itself
             if tempsDistance != 0:
                 distance_list.append(tempsDistance)
+                dist_list.append(tempsDistance)
         # add shortest distance
         shortest_dist_list.append(min(distance_list))
 
-    return shortest_dist_list
+    return shortest_dist_list, dist_list
 
 #--------------------------------------------------------------------------#
 # check number of arguments
