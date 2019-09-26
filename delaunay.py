@@ -58,7 +58,6 @@ def delaunay(positions_list):
         density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
     plt.figure()
     plt.plot(n[1][:len(n[1])-1], density/sum(n[0]))
-    #TODO: x axis is from min(n) to max(n), not from 0 to len(n)!
     plt.title("Delaunay triangulation segment length cumulative density")
 
 #--------------------------------------------------------------------------#
@@ -75,7 +74,7 @@ def dist(points):
 
 #--------------------------------------------------------------------------#
 def voronoi(positions_list):
-    voro = ss.Voronoi(positions_list, qhull_options="Qc")
+    voro = ss.Voronoi(positions_list) #, qhull_options="Qc") # Qc: sensitive parameter
 
     # voro.vertices: delaunays circles centers
     # voro.ridge_points: index of voro.vertices points couple forming lines
@@ -105,7 +104,6 @@ def voronoi(positions_list):
         density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
     plt.figure()
     plt.plot(n[1][:len(n[1])-1], density/sum(n[0]))
-    #TODO: x axis is from min(n) to max(n), not from 0 to len(n)!
     plt.title("Voronoi domains area cumulative density")
 
     # voronoi angles distribution
@@ -123,7 +121,6 @@ def voronoi(positions_list):
         density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
     plt.figure()
     plt.plot(n[1][:len(n[1])-1], density/sum(n[0]))
-    #TODO: x axis is from min(n) to max(n), not from 0 to len(n)!
     plt.title("Voronoi domains angle cumulative density")
 
 #--------------------------------------------------------------------------#
@@ -165,19 +162,29 @@ def ri(positions_list):
     # print ri value
     print(round((np.average(shortest_dist_list)/np.std(shortest_dist_list)), 2))
 
+    # all cells distance plots
     plt.figure()
     n = plt.hist(dist_list, density=True)
     plt.title("Cells distances density distribution")
-
-    #TODO: closest dist distribution (and cumulative distribution). just plot hist(shortest_dist_list) and its cumulative
 
     density = []
     for i in range(0, len(n[0])):
         density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
     plt.figure()
     plt.plot(n[1][:len(n[1])-1], density/sum(n[0]))
-    #TODO: x axis is from min(n) to max(n), not from 0 to len(n)!
     plt.title("Cells distances cumulative density")
+
+    # cells closest neighbour plots
+    plt.figure()
+    n = plt.hist(shortest_dist_list, density=True)
+    plt.title("Cells closest neighbour density distribution")
+
+    density = []
+    for i in range(0, len(n[0])):
+        density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
+    plt.figure()
+    plt.plot(n[1][:len(n[1])-1], density/sum(n[0]))
+    plt.title("Cells closest neighbour cumulative density")
 
 #--------------------------------------------------------------------------#
 def getDistLists(coord_list):
