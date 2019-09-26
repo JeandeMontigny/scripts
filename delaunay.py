@@ -33,6 +33,7 @@ def read(coord_file):
 def delaunay(positions_list):
     tri = ss.Delaunay(positions_list, qhull_options="QJ")
 
+    # plot delaunay triangulation
     plt.figure()
     plt.triplot(tri.points[:,0], tri.points[:,1], tri.simplices)
     plt.plot(tri.points[:,0], tri.points[:,1], 'o', color='black')
@@ -53,12 +54,7 @@ def delaunay(positions_list):
     plt.title("Delaunay triangulation segment length density distribution")
 
     # delaunay segment length cumulative density
-    density = []
-    for i in range(0, len(n[0])):
-        density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
-    plt.figure()
-    plt.plot(n[1][:len(n[1])-1], density/sum(n[0]))
-    plt.title("Delaunay triangulation segment length cumulative density")
+    figCumulative(n, "Delaunay triangulation segment length cumulative density")
 
 #--------------------------------------------------------------------------#
 def segDone(new_seg, seg_list):
@@ -76,10 +72,7 @@ def dist(points):
 def voronoi(positions_list):
     voro = ss.Voronoi(positions_list) #, qhull_options="Qc") # Qc: sensitive parameter
 
-    # voro.vertices: delaunays circles centers
-    # voro.ridge_points: index of voro.vertices points couple forming lines
-    # voro.ridge_vertices: index of voro.vertices points couple forming lines, including outside of region as -1
-    # voro.regions: index of vertices points composing regions. closed region if no -1 index
+    # plot voronoi diagram
     ss.voronoi_plot_2d(voro, show_vertices=False)
 
     # calculate areas and angles of every internal domains
@@ -99,12 +92,7 @@ def voronoi(positions_list):
     plt.title("Voronoi domains area density distribution")
 
     # voronoi area cumulative density
-    density = []
-    for i in range(0, len(n[0])):
-        density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
-    plt.figure()
-    plt.plot(n[1][:len(n[1])-1], density/sum(n[0]))
-    plt.title("Voronoi domains area cumulative density")
+    figCumulative(n, "Voronoi domains area cumulative density")
 
     # voronoi angles distribution
     angles = []
@@ -116,12 +104,7 @@ def voronoi(positions_list):
     plt.title("Voronoi domains angle density distribution")
 
     # voronoi angles cumulative density
-    density = []
-    for i in range(0, len(n[0])):
-        density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
-    plt.figure()
-    plt.plot(n[1][:len(n[1])-1], density/sum(n[0]))
-    plt.title("Voronoi domains angle cumulative density")
+    figCumulative(n, "Voronoi domains angle cumulative density")
 
 #--------------------------------------------------------------------------#
 def polygoneAngles(points_coord):
@@ -162,29 +145,21 @@ def ri(positions_list):
     # print ri value
     print(round((np.average(shortest_dist_list)/np.std(shortest_dist_list)), 2))
 
-    # all cells distance plots
+    # all cells distance distribution
     plt.figure()
     n = plt.hist(dist_list, density=True)
     plt.title("Cells distances density distribution")
 
-    density = []
-    for i in range(0, len(n[0])):
-        density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
-    plt.figure()
-    plt.plot(n[1][:len(n[1])-1], density/sum(n[0]))
-    plt.title("Cells distances cumulative density")
+    # all cells distance cumulative density
+    figCumulative(n, "Cells distances cumulative density")
 
-    # cells closest neighbour plots
+    # cells closest neighbour distribution
     plt.figure()
     n = plt.hist(shortest_dist_list, density=True)
     plt.title("Cells closest neighbour density distribution")
 
-    density = []
-    for i in range(0, len(n[0])):
-        density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
-    plt.figure()
-    plt.plot(n[1][:len(n[1])-1], density/sum(n[0]))
-    plt.title("Cells closest neighbour cumulative density")
+    # cells closest neighbour cumulative density
+    figCumulative(n, "Cells closest neighbour cumulative density")
 
 #--------------------------------------------------------------------------#
 def getDistLists(coord_list):
@@ -203,6 +178,15 @@ def getDistLists(coord_list):
         shortest_dist_list.append(min(distance_list))
 
     return shortest_dist_list, dist_list
+
+#--------------------------------------------------------------------------#
+def figCumulative(n, title):
+    density = []
+    for i in range(0, len(n[0])):
+        density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
+    plt.figure()
+    plt.plot(n[1][:len(n[1])-1], density/sum(n[0]))
+    plt.title(title)
 
 #--------------------------------------------------------------------------#
 # check number of arguments
