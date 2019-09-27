@@ -44,7 +44,7 @@ def main(folder):
     #TODO: cumulative distribution stat analysis.
     #      Kolmogorov-Smirnov test: statistic, pvalue = ks_2samp(distrib1, distrib2)
     #      analyse for method sensitivity and specificity?
-        significanceTable(random_weight_list, delauStats(random_weight_list, delau_list),\
+        significanceTable(folder , random_weight_list, delauStats(random_weight_list, delau_list),\
                           voroStats(random_weight_list, voro_list), riStats(random_weight_list,\
                           ri_list, short_dist_list, dist_list))
         plt.show()
@@ -272,10 +272,8 @@ def delauPlot(folder, random_weight_list, delau_list):
                 if not segDone(seg, seg_done):
                     seg_length.append(dist(seg))
                     seg_done.append(seg)
-
         # delaunay segment length density distribution
         n = ax1.hist(np.sort(seg_length)[:int(len(seg_length)-len(seg_length)*0.05)], bins=int(len(seg_length)/40), density=True, cumulative=False, histtype='bar')
-
         # delaunay segment length cumulative density
         density = []
         for i in range(0, len(n[0])):
@@ -385,19 +383,20 @@ def riPlots(folder, random_weight_list, ri, short_dist_list, dist_list):
     ax4.get_figure().savefig(folder+"neighbour_cumul_vs_rand.png")
 
 #--------------------------------------------------------------------------#
-def significanceTable(random_weight_list, delau, voro, dists):
+def significanceTable(output_folder, random_weight_list, delau, voro, dists):
 
-    columns = []; rows =["delaunay segment length", "Regularity index", "Closest neighbour", "Neighbours distances"]
+    columns = []; rows =["Delaunay segment length", "Voronoi areas", " Voronoi angles", "Regularity index", "Closest neighbour", "Neighbours distances"]
     for i in range(0, len(random_weight_list)-1):
         columns.append(str(random_weight_list[i])+" - "+str(random_weight_list[i+1]))
 
-    cells_data = [delau, dists[0], dists[1], dists[2]]
+    cells_data = [delau, voro[0], voro[1], dists[0], dists[1], dists[2]]
 
     fig, ax = plt.subplots()
     fig.patch.set_visible(False)
     ax.axis('off'); ax.axis('tight')
     ax.table(cellText=cells_data, cellLoc='center', rowLabels=rows, rowLoc='center', colLabels=columns, loc='center')
     plt.subplots_adjust(left=0.4, right=0.94)
+    plt.savefig(output_folder+"methods_significance_table.png")
 
 #--------------------------------------------------------------------------#
 def delauStats(random_weight_list, delau_list):
@@ -412,14 +411,14 @@ def delauStats(random_weight_list, delau_list):
                 if not segDone(seg, seg_done):
                     seg_length.append(dist(seg))
                     seg_done.append(seg)
-
+        # delaunay segment length density distribution
         n = plt.hist(np.sort(seg_length)[:int(len(seg_length)-len(seg_length)*0.05)], bins=int(len(seg_length)/40), density=True, cumulative=False, histtype='bar'); plt.close()
         # delaunay segment length cumulative density
         density = []
         for i in range(0, len(n[0])):
             density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
         densities.append(density)
-
+    # significance
     seg_lenght_signi = []
     for i in range(0, len(random_weight_list)-1):
         seg_lenght_signi.append(signi_star(sp.stats.ks_2samp(densities[i], densities[i+1])))
@@ -428,13 +427,49 @@ def delauStats(random_weight_list, delau_list):
 
 #--------------------------------------------------------------------------#
 def voroStats(random_weight_list, voro_list):
+    area_list = []; angle_list = []
+    for voro_index in range(0, len(voro_list)):
+        areas_list = []; angles_list = []
+        voro = voro_list[voro_index]
+        for region in voro.regions:
+            # if region doesn't have point outside. ignore non closed domains (border domains), avoid border effect
+            if -1 not in region:
+                domain_points = []
+                for index in region:
+                    domain_points.append(list(voro.vertices[index]))
+                angles_list.append(polygoneAngles(domain_points))
+                areas_list.append(polygoneArea(domain_points))
+        # voronoi area density distribution
+        n = plt.hist(np.sort(areas_list)[:int(len(areas_list)-len(areas_list)*0.1)], bins=int(len(areas_list)/10), density=True, cumulative=False, histtype='bar'); plt.close()
+        # voronoi area cumulative density
+        density = []
+        for i in range(0, len(n[0])):
+            density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
+        area_list.append(density)
+        # voronoi angles distribution
+        angles = []
+        for angle_sub_list in angles_list:
+            for angle in angle_sub_list:
+                angles.append(np.degrees(angle))
+        n = plt.hist(angles, bins=int(len(angles)/100), density=True, cumulative=False, histtype='bar'); plt.close()
+        # voronoi angles cumulative density
+        density = []
+        for i in range(0, len(n[0])):
+            density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
+        angle_list.append(density)
+    # significance
+    area_signi = []; angle_signi = []
+    for i in range(0, len(random_weight_list)-1):
+        area_signi.append(signi_star(sp.stats.ks_2samp(area_list[i], area_list[i+1])))
+        angle_signi.append(signi_star(sp.stats.ks_2samp(angle_list[i], angle_list[i+1])))
 
-    return
+    return area_signi, angle_signi
 
 #--------------------------------------------------------------------------#
 def riStats(random_weight_list, ri_list, short_dist_list, dist_list):
 
     ri_signi = []; short_dist_signi = []; dist_signi = []
+    # significance
     for i in range(0, len(random_weight_list)-1):
         ri_signi.append(signi_star(sp.stats.ttest_ind(ri_list[i], ri_list[i+1])))
         short_dist_signi.append(signi_star(sp.stats.ks_2samp(short_dist_list[i], short_dist_list[i+1])))
