@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import sys, os, re
 import numpy as np
+import scipy as sp
 import random as rd
-import scipy.spatial as ss
 from scipy.stats import ks_2samp
 import matplotlib.pyplot as plt
 
@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 #TODO: several repetition for stats
 def main(folder):
     create_mosaics = False
-    figure_creation = True
+    figure_creation = False
     stat_analysis = True
 
     if create_mosaics:
@@ -38,16 +38,17 @@ def main(folder):
         delauPlot(folder, random_weight_list, delau_list)
         voroPlot(folder, random_weight_list, voro_list)
         riPlots(folder, random_weight_list, ri_list, short_dist_list, dist_list)
+        plt.show()
 
     if stat_analysis:
     #TODO: cumulative distribution stat analysis.
     #      Kolmogorov-Smirnov test: statistic, pvalue = ks_2samp(distrib1, distrib2)
     #      analyse for method sensitivity and specificity?
-
-        delayStats(random_weight_list, delau_list)
-        voroStats(random_weight_list, voro_list)
-        riStats(random_weight_list, ri_list)
-
+        significanceTable(random_weight_list, delauStats(random_weight_list, delau_list),\
+                          voroStats(random_weight_list, voro_list), riStats(random_weight_list,\
+                          ri_list, short_dist_list, dist_list))
+        plt.show()
+        
     return 1
 
 #--------------------------------------------------------------------------#
@@ -81,7 +82,7 @@ def read(coord_file):
 
 #--------------------------------------------------------------------------#
 def delaunay(output_folder, positions_list, random_weight):
-    tri = ss.Delaunay(positions_list)#, qhull_options="QJ")
+    tri = sp.spatial.Delaunay(positions_list)#, qhull_options="QJ")
 
     return tri
 
@@ -128,7 +129,7 @@ def dist(points):
 
 #--------------------------------------------------------------------------#
 def voronoi(output_folder, positions_list, random_weight):
-    voro = ss.Voronoi(positions_list)#, qhull_options="Qc") # Qc: sensitive parameter
+    voro = sp.spatial.Voronoi(positions_list)#, qhull_options="Qc") # Qc: sensitive parameter
 
     return voro
 
@@ -136,7 +137,7 @@ def voronoi(output_folder, positions_list, random_weight):
     # voro.ridge_points: index of voro.vertices points couple forming lines
     # voro.ridge_vertices: index of voro.vertices points couple forming lines, including outside of region as -1
     # voro.regions: index of vertices points composing regions. closed region if no -1 index
-    ss.voronoi_plot_2d(voro)
+    sp.spatial.voronoi_plot_2d(voro)
 
     # calculate areas and angles of every internal domains
     areas_list = []; angles_list = []
@@ -350,7 +351,7 @@ def riPlots(folder, random_weight_list, ri, short_dist_list, dist_list):
     fig2 = plt.figure(); ax2=fig2.add_subplot(111)
     fig3 = plt.figure(); ax3=fig3.add_subplot(111)
     fig4 = plt.figure(); ax4=fig4.add_subplot(111)
-    
+
     for dist_index in range(0, len(short_dist_list)):
         # closest neighbour distance distribution
         n = ax1.hist(short_dist_list[dist_index], density=True)
@@ -379,14 +380,51 @@ def riPlots(folder, random_weight_list, ri, short_dist_list, dist_list):
     ax3.set_title("Neighbour distance distribution")
     ax3.get_figure().savefig(folder+"neighbour_distrib_vs_rand.png")
 
-    ax4.set_title("Neighbour cumulative density")
+    ax4.set_title("Neighbour distance cumulative density")
     ax4.legend()
     ax4.get_figure().savefig(folder+"neighbour_cumul_vs_rand.png")
 
 #--------------------------------------------------------------------------#
-def delayStats(random_weight_list, delau_list):
+def significanceTable(random_weight_list, delau, voro, dists):
 
-    return
+    columns = []; rows =["delaunay segment length", "Regularity index", "Closest neighbour", "Neighbours distances"]
+    for i in range(0, len(random_weight_list)-1):
+        columns.append(str(random_weight_list[i])+" - "+str(random_weight_list[i+1]))
+
+    cells_data = [delau, dists[0], dists[1], dists[2]]
+
+    fig, ax = plt.subplots()
+    fig.patch.set_visible(False)
+    ax.axis('off'); ax.axis('tight')
+    ax.table(cellText=cells_data, cellLoc='center', rowLabels=rows, rowLoc='center', colLabels=columns, loc='center')
+    plt.subplots_adjust(left=0.4, right=0.94)
+
+#--------------------------------------------------------------------------#
+def delauStats(random_weight_list, delau_list):
+    densities = []
+    for tri_index in range(0, len(random_weight_list)):
+        tri = delau_list[tri_index]
+        seg_length = []; seg_done = []
+        # simplices: index of tri.points points forming triangles
+        for triangle in tri.simplices:
+            segments = [[tri.points[triangle[0]], tri.points[triangle[1]]], [tri.points[triangle[0]], tri.points[triangle[2]]], [tri.points[triangle[1]], tri.points[triangle[2]]]]
+            for seg in segments:
+                if not segDone(seg, seg_done):
+                    seg_length.append(dist(seg))
+                    seg_done.append(seg)
+
+        n = plt.hist(np.sort(seg_length)[:int(len(seg_length)-len(seg_length)*0.05)], bins=int(len(seg_length)/40), density=True, cumulative=False, histtype='bar'); plt.close()
+        # delaunay segment length cumulative density
+        density = []
+        for i in range(0, len(n[0])):
+            density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
+        densities.append(density)
+
+    seg_lenght_signi = []
+    for i in range(0, len(random_weight_list)-1):
+        seg_lenght_signi.append(signi_star(sp.stats.ks_2samp(densities[i], densities[i+1])))
+
+    return seg_lenght_signi
 
 #--------------------------------------------------------------------------#
 def voroStats(random_weight_list, voro_list):
@@ -396,7 +434,25 @@ def voroStats(random_weight_list, voro_list):
 #--------------------------------------------------------------------------#
 def riStats(random_weight_list, ri_list, short_dist_list, dist_list):
 
-    return
+    ri_signi = []; short_dist_signi = []; dist_signi = []
+    for i in range(0, len(random_weight_list)-1):
+        ri_signi.append(signi_star(sp.stats.ttest_ind(ri_list[i], ri_list[i+1])))
+        short_dist_signi.append(signi_star(sp.stats.ks_2samp(short_dist_list[i], short_dist_list[i+1])))
+        dist_signi.append(signi_star(sp.stats.ks_2samp(dist_list[i][:len(dist_list)-1], dist_list[i+1][:len(dist_list)-1])))
+
+    return ri_signi, short_dist_signi, dist_signi
+
+#--------------------------------------------------------------------------#
+def signi_star(stat):
+    if stat[1] < 0.05:
+        if stat[1] < 0.001:
+            return "***"
+        elif stat[1] < 0.01:
+            return "**"
+        else:
+            return "*"
+    else:
+        return "."
 
 #--------------------------------------------------------------------------#
 # check number of arguments
