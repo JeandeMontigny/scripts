@@ -7,19 +7,20 @@ from scipy.stats import ks_2samp
 import matplotlib.pyplot as plt
 
 #--------------------------------------------------------------------------#
-#TODO: several repetition for stats
 def main(folder):
     create_mosaics = False
     figure_creation = False
-    stat_analysis = True
+    stat_analysis = False
+    show_plots = False
 
     if create_mosaics:
-        for rand in range(1, 10):
-            mosaic_creation(folder, rand/10)
+        repetitions = 8
+        for rand in range(1, 11):
+            mosaic_creation(folder, rand/10, repetitions)
 
     delau_list = []; voro_list = []; ri_list = []; short_dist_list =[]; dist_list = []; random_weight_list = []
 
-    for coord_file in [file for file in os.listdir(folder) if file.endswith(".txt")]:
+    for coord_file in [file for file in os.listdir(folder) if file.startswith("mosaic") and file.endswith(".txt")]:
         random_weight = coord_file[len(coord_file)-7:len(coord_file)-4] if coord_file[len(coord_file)-6] == '.' else coord_file[len(coord_file)-5:len(coord_file)-4]
         random_weight_list.append(float(random_weight))
 
@@ -34,39 +35,42 @@ def main(folder):
 
     random_weight_list, delau_list, voro_list, ri_list, short_dist_list, dist_list = sortData(random_weight_list, delau_list, voro_list, ri_list, short_dist_list, dist_list)
 
+    # TODO: at this point, all files hve been analysed, and are sorted in correct order.
+    #       Now, need to create average distribution. just take all result for each random weight, and average it
+    #       This will have to be done in each xxPlot function, and each xxStats methods
+
     if figure_creation:
         delauPlot(folder, random_weight_list, delau_list)
         voroPlot(folder, random_weight_list, voro_list)
         riPlots(folder, random_weight_list, ri_list, short_dist_list, dist_list)
-        plt.show()
 
     if stat_analysis:
-    #TODO: cumulative distribution stat analysis.
-    #      Kolmogorov-Smirnov test: statistic, pvalue = ks_2samp(distrib1, distrib2)
-    #      analyse for method sensitivity and specificity?
-        significanceTable(folder , random_weight_list, delauStats(random_weight_list, delau_list),\
+    # methods sensitivity analysis
+        significanceTable(folder, random_weight_list, delauStats(random_weight_list, delau_list),\
                           voroStats(random_weight_list, voro_list), riStats(random_weight_list,\
                           ri_list, short_dist_list, dist_list))
+
+    if show_plots:
         plt.show()
-        
+
     return 1
 
 #--------------------------------------------------------------------------#
-def mosaic_creation(output_folder, weight):
+def mosaic_creation(output_folder, weight, n):
     if float(weight) > 1 or float(weight) < 0:
         SystemExit('random weigh should be between 0 and 1')
     cell_per_dim = 20
     cells_space = 25
-    rand = float(weight) * cells_space
+    rand = float(weight) * cells_space /2
 
-    if os.path.isfile(output_folder+"mosaic_"+str(cell_per_dim*cell_per_dim)+"cells_"+str(weight)+".txt"):
-        os.remove(output_folder+"mosaic_"+str(cell_per_dim*cell_per_dim)+"cells_"+str(weight)+".txt")
-    output_file=open(output_folder+"mosaic_"+str(cell_per_dim*cell_per_dim)+"cells_"+str(weight)+".txt", "a")
-
-    for i in range(0, cell_per_dim):
-        for j in range(0, cell_per_dim):
-            position = str( round(rd.uniform(-rand, rand), 2)+(i*cells_space) ) + " " + str( round(rd.uniform(-rand, rand), 2)+(j*cells_space) ) + "\n"
-            output_file.write(position)
+    for repetition in range(0, n):
+        if os.path.isfile(output_folder+"mosaic_"+str(cell_per_dim*cell_per_dim)+"cells_"+str(repetition)+"_"+str(weight)+".txt"):
+            os.remove(output_folder+"mosaic_"+str(cell_per_dim*cell_per_dim)+"cells_"+str(repetition)+"_"+str(weight)+".txt")
+        output_file=open(output_folder+"mosaic_"+str(cell_per_dim*cell_per_dim)+"cells_"+str(repetition)+"_"+str(weight)+".txt", "a")
+        for i in range(0, cell_per_dim):
+            for j in range(0, cell_per_dim):
+                position = str( round(rd.uniform(-rand, rand), 2)+(i*cells_space) ) + " " + str( round(rd.uniform(-rand, rand), 2)+(j*cells_space) ) + "\n"
+                output_file.write(position)
     output_file.close()
 
 #--------------------------------------------------------------------------#
@@ -396,7 +400,7 @@ def significanceTable(output_folder, random_weight_list, delau, voro, dists):
     ax.axis('off'); ax.axis('tight')
     ax.table(cellText=cells_data, cellLoc='center', rowLabels=rows, rowLoc='center', colLabels=columns, loc='center')
     plt.subplots_adjust(left=0.4, right=0.94)
-    plt.savefig(output_folder+"methods_significance_table.png")
+    plt.savefig(output_folder+"methods_significance_table.png", dpi = 256)
 
 #--------------------------------------------------------------------------#
 def delauStats(random_weight_list, delau_list):
