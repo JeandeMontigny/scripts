@@ -17,7 +17,7 @@ def main(folder):
         for rand in range(1, 10):
             mosaic_creation(folder, rand/10)
 
-    delau_list = []; voro_list = []; ri_list = []; dist_list = []; random_weight_list = []
+    delau_list = []; voro_list = []; ri_list = []; short_dist_list =[]; dist_list = []; random_weight_list = []
 
     for coord_file in [file for file in os.listdir(folder) if file.endswith(".txt")]:
         random_weight = coord_file[len(coord_file)-7:len(coord_file)-4] if coord_file[len(coord_file)-6] == '.' else coord_file[len(coord_file)-5:len(coord_file)-4]
@@ -29,17 +29,15 @@ def main(folder):
         # data analyse
         delau_list.append(delaunay(folder, cells_position, random_weight))
         voro_list.append(voronoi(folder, cells_position, random_weight))
-        ri_val, dist = ri(cells_position)
-        ri_list.append(ri_val)
-        dist_list.append(dist)
+        ri_val, short_dist, dist = ri(cells_position)
+        ri_list.append(ri_val); short_dist_list.append(short_dist); dist_list.append(dist)
 
-    random_weight_list, delau_list, voro_list, ri_list = sortData(random_weight_list, delau_list, voro_list, ri_list)
+    random_weight_list, delau_list, voro_list, ri_list, short_dist_list, dist_list = sortData(random_weight_list, delau_list, voro_list, ri_list, short_dist_list, dist_list)
 
     if figure_creation:
         delauPlot(folder, random_weight_list, delau_list)
         voroPlot(folder, random_weight_list, voro_list)
-        riPlot(folder, random_weight_list, ri_list)
-        distPlot(folder, random_weight_list, dist_list)
+        riPlots(folder, random_weight_list, ri_list, short_dist_list, dist_list)
 
     if stat_analysis:
     #TODO: cumulative distribution stat analysis.
@@ -83,7 +81,7 @@ def read(coord_file):
 
 #--------------------------------------------------------------------------#
 def delaunay(output_folder, positions_list, random_weight):
-    tri = ss.Delaunay(positions_list, qhull_options="QJ")
+    tri = ss.Delaunay(positions_list)#, qhull_options="QJ")
 
     return tri
 
@@ -130,7 +128,7 @@ def dist(points):
 
 #--------------------------------------------------------------------------#
 def voronoi(output_folder, positions_list, random_weight):
-    voro = ss.Voronoi(positions_list, qhull_options="Qc")
+    voro = ss.Voronoi(positions_list)#, qhull_options="Qc") # Qc: sensitive parameter
 
     return voro
 
@@ -221,7 +219,7 @@ def polygoneArea(points_coord):
 def ri(positions_list):
     shortest_dist_list, dist_list = getDistLists(positions_list)
 
-    return round((np.average(shortest_dist_list)/np.std(shortest_dist_list)), 2), dist_list
+    return round((np.average(shortest_dist_list)/np.std(shortest_dist_list)), 2), shortest_dist_list, dist_list
 
 #--------------------------------------------------------------------------#
 def getDistLists(coord_list):
@@ -242,7 +240,7 @@ def getDistLists(coord_list):
     return shortest_dist_list, dist_list
 
 #--------------------------------------------------------------------------#
-def sortData(label, a, b, c):
+def sortData(label, a, b, c, d, e):
     # insertion sort
     i = 1
     while i < len(label):
@@ -252,10 +250,12 @@ def sortData(label, a, b, c):
             a[j], a[j-1] = a[j-1], a[j]
             b[j], b[j-1] = b[j-1], b[j]
             c[j], c[j-1] = c[j-1], c[j]
+            d[j], d[j-1] = d[j-1], d[j]
+            e[j], e[j-1] = e[j-1], e[j]
             j = j-1
         i = i+1
 
-    return label, a, b, c
+    return label, a, b, c, d, e
 
 #--------------------------------------------------------------------------#
 def delauPlot(folder, random_weight_list, delau_list):
@@ -339,16 +339,49 @@ def voroPlot(folder, random_weight_list, voro_list):
     ax4.get_figure().savefig(folder+"voro_angle_cumul_vs_rand.png")
 
 #--------------------------------------------------------------------------#
-def riPlot(folder, random_weight_list, ri):
+def riPlots(folder, random_weight_list, ri, short_dist_list, dist_list):
+    # ri value vs random
     plt.figure()
     plt.plot(random_weight_list, ri)
     plt.title("RI measure depending on randomness weight for mosaic creation")
     plt.savefig(folder+"ri_vs_random.png")
 
-#--------------------------------------------------------------------------#
-def distPlot(folder, random_weight_list, voro_list):
-    #TODO
-    return
+    fig1 = plt.figure(); ax1=fig1.add_subplot(111)
+    fig2 = plt.figure(); ax2=fig2.add_subplot(111)
+    fig3 = plt.figure(); ax3=fig3.add_subplot(111)
+    fig4 = plt.figure(); ax4=fig4.add_subplot(111)
+    
+    for dist_index in range(0, len(short_dist_list)):
+        # closest neighbour distance distribution
+        n = ax1.hist(short_dist_list[dist_index], density=True)
+        # closest neighbour distance cumulative density
+        density = []
+        for i in range(0, len(n[0])):
+            density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
+        ax2.plot(n[1][:len(n[1])-1], density/sum(n[0]), label=str(random_weight_list[dist_index]))
+
+    for dist_index in range(0, len(dist_list)):
+        # neighbours distance distribution
+        n = ax3.hist(dist_list[dist_index], density=True)
+        # neighbours distance culumative density
+        density = []
+        for i in range(0, len(n[0])):
+            density.append((n[0][i] + density[i-1]) if i > 0 else (n[0][i]))
+        ax4.plot(n[1][:len(n[1])-1], density/sum(n[0]), label=str(random_weight_list[dist_index]))
+
+    ax1.set_title("Closest neighbour distance distribution")
+    ax1.get_figure().savefig(folder+"closest_neighbour_distrib_vs_rand.png")
+
+    ax2.set_title("Closest neighbour cumulative density")
+    ax2.legend()
+    ax2.get_figure().savefig(folder+"closest_neighbour_cumul_vs_rand.png")
+
+    ax3.set_title("Neighbour distance distribution")
+    ax3.get_figure().savefig(folder+"neighbour_distrib_vs_rand.png")
+
+    ax4.set_title("Neighbour cumulative density")
+    ax4.legend()
+    ax4.get_figure().savefig(folder+"neighbour_cumul_vs_rand.png")
 
 #--------------------------------------------------------------------------#
 def delayStats(random_weight_list, delau_list):
@@ -361,7 +394,7 @@ def voroStats(random_weight_list, voro_list):
     return
 
 #--------------------------------------------------------------------------#
-def riStats(random_weight_list, ri_list):
+def riStats(random_weight_list, ri_list, short_dist_list, dist_list):
 
     return
 
