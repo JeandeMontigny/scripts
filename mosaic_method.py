@@ -8,14 +8,14 @@ import matplotlib.pyplot as plt
 
 #--------------------------------------------------------------------------#
 def main(folder):
-    create_mosaics = False
+    create_mosaics = True
     mosaic_repetitions = 8
     figure_creation = True
     stat_analysis = True
     show_plots = False
 
     if create_mosaics:
-        for rand in range(1, 11):
+        for rand in range(1, 10):
             mosaic_creation(folder, rand/10, mosaic_repetitions)
 
     delau_list = []; voro_list = []; ri_list = []; short_dist_list =[]; dist_list = []; random_weight_list = []
@@ -54,7 +54,6 @@ def main(folder):
 
         CumulDensityPlot(weight_single_list, dist_x_list, dist_ave_list, "Averaged neighbour distance cumulative density", folder+"neighbour_cumul_vs_rand.png")
 
-    #TODO: average cumulative distribution for stats.
     if stat_analysis:
     # methods sensitivity analysis
         significanceTable(folder, weight_single_list,\
@@ -74,7 +73,7 @@ def mosaic_creation(output_folder, weight, n):
         SystemExit('random weigh should be between 0 and 1')
     cell_per_dim = 20
     cells_space = 25
-    rand = float(weight) * cells_space # / 2?
+    rand = float(weight) * 20
 
     for repetition in range(0, n):
         if os.path.isfile(output_folder+"mosaic_"+str(cell_per_dim*cell_per_dim)+"cells_"+str(repetition)+"_"+str(weight)+".txt"):
