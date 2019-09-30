@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 #--------------------------------------------------------------------------#
 def main(folder):
     create_mosaics = False
-    mosaic_repetitions = 3
+    mosaic_repetitions = 8
     figure_creation = True
     stat_analysis = True
     show_plots = False
@@ -635,10 +635,10 @@ def singleRiPlots(folder, random_weight_list, ri, short_dist_list, dist_list):
 #--------------------------------------------------------------------------#
 def getAveCumulative(data, nb_of_repetitions):
     fig1 = plt.figure(); ax1=fig1.add_subplot(111)
-
     ave_cumul = []; temps_ave_cumul = []; x_cumul = []; temps_x_cumul = []
     for index in range(0, len(data)):
-        n = ax1.hist(data[index], density=True)
+        n = ax1.hist(data[index], bins=50, density=True)
+        plt.close(fig1)
 
         # cumulative density
         density = []
@@ -697,7 +697,7 @@ def delauAveCumul(weight_single_list, nb_of_repetitions, delau_list):
     fig1 = plt.figure(); ax1=fig1.add_subplot(111)
     ave_cumul = []; temps_ave_cumul = []; x_cumul = []; temps_x_cumul = []
     for index in range(0, len(list_seg_length)):
-        n = ax1.hist(np.sort(list_seg_length[index])[:int(len(list_seg_length[index])-len(list_seg_length[index])*0.05)], bins=25, density=True)
+        n = ax1.hist(np.sort(list_seg_length[index])[:int(len(list_seg_length[index])-len(list_seg_length[index])*0.05)], bins=50, density=True)
 
         # cumulative density
         density = []
@@ -751,7 +751,7 @@ def voroAveCumul(weight_single_list, nb_of_repetitions, voro_list):
     fig1 = plt.figure(); ax1=fig1.add_subplot(111)
     area_ave_cumul = []; temps_ave_cumul = []; area_x_cumul = []; temps_x_cumul = []
     for index in range(0, len(list_areas_list)):
-        n = ax1.hist(np.sort(list_areas_list[index])[:int(len(list_areas_list[index])-len(list_areas_list[index])*0.1)], bins=25, density=True)
+        n = ax1.hist(np.sort(list_areas_list[index])[:int(len(list_areas_list[index])-len(list_areas_list[index])*0.1)], bins=50, density=True)
         plt.close(fig1)
 
         # cumulative density
