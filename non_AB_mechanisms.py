@@ -24,7 +24,7 @@ def main(output_folder):
 
 #    fate_mosaic = fate(cells)
 #    death_mosaic = death(cells, death_rate)
-    migration_mosaic = migration(cells, 2)
+    migration_mosaic = migration(cells, 20)
 
 #    fate_ri = getRi(fate_mosaic, nb_types)
 #    death_ri = getRi(death_mosaic, nb_types)
@@ -119,24 +119,10 @@ def twodDistance(a, b):
     return np.sqrt(np.square(a[0] - b[0]) + np.square(a[1] - b[1]))
 
 #--------------------------------------------------------------------------#
-def getVectorAB(a, b):
-    return b[0]-a[0], b[1]-a[1]
-
-#--------------------------------------------------------------------------#
-def newPosition(cell, vectors, factor=15):
-    mean_vector = meanVector(vectors)
-
-    return round(cell[0]-mean_vector[0], 2), round(cell[1]-mean_vector[1], 2), cell[2]
-    # return round(cell[0]-(factor*mean_vector[0]/twodDistance([0, 0],mean_vector)), 2), round(cell[1]-(factor*mean_vector[1]/twodDistance([0, 0],mean_vector)), 2), cell[2]
-
-#--------------------------------------------------------------------------#
-def meanVector(vectors):
-    x_list = []; y_list = []
-    for vector in vectors:
-        x_list.append(vector[0])
-        y_list.append(vector[1])
-
-    return np.average(x_list), np.average(y_list)
+def newCoord(cell_ref, cell_to_move, dist, factor=4):
+    x = cell_to_move[0] + (factor*(cell_to_move[0]-cell_ref[0])/dist)
+    y = cell_to_move[1] + (factor*(cell_to_move[1]-cell_ref[1])/dist)
+    return round(x, 2), round(y, 2), cell_to_move[2]
 
 #--------------------------------------------------------------------------#
 def fate(cells, write=False):
@@ -204,11 +190,10 @@ def death(cells, death_rate):
     return cells
 
 #--------------------------------------------------------------------------#
-def migration(cells, repetition=2, neighbourhood=25):
-    for iteration in range(0, int(len(cells)*repetition)):
+def migration(cells, repetition=25, exclusion=25):
+    for iteration in range(0, repetition):
         print("migration mechanism iteration", iteration, "out of", int(len(cells)*repetition), end="\r", flush=True)
-        # find closest cells couple
-        closest_cells = 1e6; closest_couple = []
+        # for each cell, repulse all cells that are too close
         for i in range(0, len(cells)):
             cell_a = cells[i]
             for j in range(0, len(cells)):
@@ -216,34 +201,8 @@ def migration(cells, repetition=2, neighbourhood=25):
                 # if homotypic cells
                 if cell_b[2] == cell_a[2]:
                     distance = twodDistance(cell_a, cell_b)
-                    if distance > 0 and distance < closest_cells:
-                        closest_cells = distance
-                        closest_couple = [cell_a, cell_b]
-        # decide if cell_a or cell_b has to move
-        mean_dist_a = []; vectors_a = []
-        cell_a = closest_couple[0]
-        for i in range(0, len(cells)):
-            cell_c = cells[i]
-            distance = twodDistance(cell_a,  cell_c)
-            if cell_c[2] == cell_a[2] and distance < neighbourhood:
-                mean_dist_a.append(distance)
-                vectors_a.append(getVectorAB(cell_a, cell_c))
-
-        mean_dist_b = []; vectors_b = []
-        cell_b = closest_couple[1]
-        for i in range(0, len(cells)):
-            cell_c = cells[i]
-            distance = twodDistance(cell_b,  cell_c)
-            if cell_c[2] == cell_b[2] and distance < neighbourhood:
-                mean_dist_b.append(distance)
-                vectors_b.append(getVectorAB(cell_b, cell_c))
-        # select cell to move and remplace it with new coordinates
-        if np.average(mean_dist_a) > np.average(mean_dist_b):
-            cells.remove(cell_a)
-            cells.append(newPosition(cell_a, vectors_a))
-        else:
-            cells.remove(cell_b)
-            cells.append(newPosition(cell_b, vectors_b))
+                    if distance > 0 and distance < exclusion:
+                        cells[j] = newCoord(cell_a, cell_b, distance)
 
     return cells
 
