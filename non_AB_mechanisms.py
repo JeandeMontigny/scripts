@@ -23,20 +23,21 @@ def main(output_folder):
     print("initial density (per cell type):", int(density), "- initial ri:", initial_ri)
 
 #    fate_mosaic = fate(cells)
-#    death_mosaic = death(cells, death_rate)
-    migration_mosaic = migration(cells, 20)
+#    death_mosaic = death(fate_mosaic, death_rate)
+    death_mosaic = death(cells, death_rate)
+    migration_mosaic = migration(cells, repetition=25, exclusion=30)
 
 #    fate_ri = getRi(fate_mosaic, nb_types)
-#    death_ri = getRi(death_mosaic, nb_types)
+    death_ri = getRi(death_mosaic, nb_types)
     migration_ri = getRi(migration_mosaic, nb_types)
 
     print()
-
-#    print("non AB death:", death_ri)
+#    print("non AB fate:", fate_ri)
+    print("non AB death:", death_ri)
     print("non AB migration:", migration_ri)
 
 #    plotMosaic(fate_mosaic, nb_types, "Mosaic created with non AB fate mechanism")
-#    plotMosaic(death_mosaic, nb_types, "Mosaic created with non AB death mechanism")
+    plotMosaic(death_mosaic, nb_types, "Mosaic created with non AB death mechanism")
     plotMosaic(migration_mosaic, nb_types, "Mosaic created with non AB migration mechanism")
 
     plt.show()
@@ -152,8 +153,9 @@ def fate(cells, write=False):
 
 #--------------------------------------------------------------------------#
 def death(cells, death_rate):
-    for iteration in range(0, int(len(cells)*death_rate)):
-        print("death mechanism iteration", iteration, "out of", int(len(cells)*death_rate), end="\r", flush=True)
+    repetition = int(len(cells)*death_rate)
+    for iteration in range(0, repetition):
+        print("death mechanism iteration", iteration, "out of", repetition, end="\r", flush=True)
         # find closest cells couple
         closest_cells = 1e6; closest_couple = []
         for i in range(0, len(cells)):
@@ -192,7 +194,7 @@ def death(cells, death_rate):
 #--------------------------------------------------------------------------#
 def migration(cells, repetition=25, exclusion=25):
     for iteration in range(0, repetition):
-        print("migration mechanism iteration", iteration, "out of", int(len(cells)*repetition), end="\r", flush=True)
+        print("migration mechanism iteration", iteration, "out of", repetition, end="\r", flush=True)
         # for each cell, repulse all cells that are too close
         for i in range(0, len(cells)):
             cell_a = cells[i]
