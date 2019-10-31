@@ -15,11 +15,13 @@ def main(fodler):
     threads_nb = int(os.cpu_count()/2)
     file_queue = [fodler+file for file in os.listdir(fodler) if file.endswith(".swc")]
 
-    print(len(file_queue), "files to process, using", threads_nb, "CPUs")
+    print("Processing", len(file_queue), "files, using", threads_nb, "CPUs")
     # threads_nb processors will run read_file method for each file in file_queue
     output = regroup_data(Pool(threads_nb).map(read_file, enumerate(file_queue)))
 
-    analyse(output, figures = True, clustering = False)
+    analyse(output, figures = False, clustering = False)
+
+    subtype_charac(output, figures = True)
 
     print("Execution time:", round(time.time() - start, 2), "sec")
     plt.show()
@@ -76,7 +78,7 @@ def read_file(enumerate_obj):
         print("file only contains a cell body or no branching points")
         return None
 
-    return process_file([distance_terminal_tab, distance_branching_tab, coord_tab, z_terminal_tab])
+    return process_file([distance_terminal_tab, distance_branching_tab, coord_tab, z_terminal_tab, nb_dend_root])
 
 #--------------------------------------------------------------------------#
 def process_file(output):
@@ -93,7 +95,8 @@ def process_file(output):
     ave_term_lam_depth = np.average(output[3])
 
     return average_terminal_distance, disc_diam_95, average_branch_distance, \
-        aniso_score, z_coord_distrib, peaks, ave_term_lam_depth, nb_branching
+        aniso_score, z_coord_distrib, peaks, ave_term_lam_depth, \
+        nb_branching, output[4]
 
 #--------------------------------------------------------------------------#
 def analyse(output, figures = True, clustering = False, pca = False):
@@ -125,6 +128,51 @@ def analyse(output, figures = True, clustering = False, pca = False):
 #TODO: find new PCA module
 #    if pca:
 #        pca_analysis([output[0], output[1], output[2], output[3]])
+
+#--------------------------------------------------------------------------#
+def subtype_charac(output, figures = False):
+    on, off, on_off = split_by_type(output)
+
+    print(len(on[0]), "on;", len(off[0]), "off;", len(on_off[0]), "on-off")
+    # print("average on z terminal depth:" , np.average(on[4]))
+    # print("average off z terminal depth:" , np.average(off[4]))
+    print("ave on-off terminal depth:" , round(np.average(on_off[4]), 2))
+
+    # on-off DSGC (all 4 types in 1 category)
+    dsgc_diam = []; dsgc_root = []; dsgc_branch_dist = []
+    dsgc_aniso = []; dsgc_branch_nb = []
+    for i in range(0, len(on_off[1])):
+        # if on_off[4][i] > 26.1 and on_off[1][i] is not None :
+        if on_off[1][i] is not None :
+            dsgc_diam.append(on_off[1][i])
+            dsgc_branch_dist.append(on_off[2][i])
+            dsgc_aniso.append(on_off[3][i])
+            dsgc_branch_nb.append(on_off[5][i])
+            dsgc_root.append(on_off[6][i])
+    print(len(dsgc_diam), "dsgc cells", \
+    "\nnb root:", round(np.average(dsgc_root), 2), \
+        "- std:", round(np.std(dsgc_root), 2), \
+        "; real: 4.45 - std: 1.0", \
+    "\ndiameter:", round(np.average(dsgc_diam), 2), \
+        "- std:", round(np.std(dsgc_diam), 2), \
+        "; real: 147.21 - std: 34.28", \
+    "\nbranchin nb:", round(np.average(dsgc_branch_nb), 2), \
+        "- std:", round(np.std(dsgc_branch_nb), 2), \
+        "; real: 116.07 - std: 58.32", \
+    "\nbranchin dist:", round(np.average(dsgc_branch_dist), 2), \
+        "- std:", round(np.std(dsgc_branch_dist), 2), \
+        "; real: 70.46 - std: 16.72", \
+    "\naniso:", round(np.average(dsgc_aniso), 2), \
+        "- std:", round(np.std(dsgc_aniso), 2), \
+        "; real: 0.32 - std: 0.17"
+    )
+
+    if figures:
+        fig_violin(dsgc_root, title = "dsgc root number distribution")
+        fig_violin(dsgc_diam, title = "dsgc diameter distribution")
+        fig_violin(dsgc_branch_nb, title = "dsgc branchin number distribution")
+        fig_violin(dsgc_branch_dist, title = "dsgc branchin distance distribution")
+        fig_violin(dsgc_aniso, title = "dsgc aniso score distribution")
 
 #--------------------------------------------------------------------------#
 def distance_xd(point1, point2):
@@ -202,7 +250,7 @@ def count_z(multi_tab, inf_boundary, sup_boundary):
     return count
 
 #--------------------------------------------------------------------------#
-def get_z_distrib(coord_tab, smooth = False):
+def get_z_distrib(coord_tab, smooth = False, figures = False):
     tab_z_count = []; interval = []
     for i in frange(0,75, 0.5):
         tab_z_count.append(count_z(coord_tab, i, i+0.5))
@@ -210,6 +258,11 @@ def get_z_distrib(coord_tab, smooth = False):
     tab_z_count = np.asarray(tab_z_count)
     if smooth:
         tab_z_count = sig.savgol_filter(tab_z_count, 5, 3)
+
+    if figures:
+        plt.figure()
+        plt.plot(tab_z_count)
+        plt.show()
 
     return tab_z_count
 
@@ -257,15 +310,18 @@ def type_finder(peaks):
 def split_by_type(output, print_types_nb = False):
     mean_z_terminal_on = []; aniso_sub_on = []; diam_sub_on = []
     term_dist_sub_on = []; branching_dist_sub_on = []
-    branching_nb_on = []
+    z_coord_distrib_on = []
+    branching_nb_on = []; root_nb_on = []
 
     mean_z_terminal_off = []; aniso_sub_off = []; diam_sub_off = []
     term_dist_sub_off = []; branching_dist_sub_off = []
-    branching_nb_off = []
+    z_coord_distrib_off = []
+    branching_nb_off = []; root_nb_off = []
 
     mean_z_terminal_on_off = []; aniso_sub_on_off = []; diam_sub_on_off = []
     term_dist_sub_on_off = []; branching_dist_sub_on_off = []
-    branching_nb_on_off = []
+    z_coord_distrib_on_off = []
+    branching_nb_on_off = []; root_nb_on_off = []
 
     for i in range(0, len(output[5])):
         type = type_finder(output[5][i])
@@ -274,32 +330,42 @@ def split_by_type(output, print_types_nb = False):
             diam_sub_on.append(output[1][i])
             branching_dist_sub_on.append(output[2][i])
             aniso_sub_on.append(output[3][i])
+            z_coord_distrib_on.append(output[4][i])
             mean_z_terminal_on.append(output[6][i])
             branching_nb_on.append(output[7][i])
+            root_nb_on.append(output[8][i])
         if type == "off":
             term_dist_sub_off.append(output[0][i])
             diam_sub_off.append(output[1][i])
             branching_dist_sub_off.append(output[2][i])
             aniso_sub_off.append(output[3][i])
+            z_coord_distrib_off.append(output[4][i])
             mean_z_terminal_off.append(output[6][i])
             branching_nb_off.append(output[7][i])
+            root_nb_off.append(output[8][i])
         if type == "on-off":
             term_dist_sub_on_off.append(output[0][i])
             diam_sub_on_off.append(output[1][i])
             branching_dist_sub_on_off.append(output[2][i])
             aniso_sub_on_off.append(output[3][i])
+            z_coord_distrib_on_off.append(output[4][i])
             mean_z_terminal_on_off.append(output[6][i])
             branching_nb_on_off.append(output[7][i])
+            root_nb_on_off.append(output[8][i])
 
     if print_types_nb:
-        print(len(term_dist_sub_on), "on cells,", len(term_dist_sub_off), "off cells,", len(term_dist_sub_on_off), "on-off cells" )
+        print(len(term_dist_sub_on), "on cells,", len(term_dist_sub_off),\
+            "off cells,", len(term_dist_sub_on_off), "on-off cells" )
 
     on = [term_dist_sub_on, diam_sub_on, branching_dist_sub_on, \
-        aniso_sub_on, mean_z_terminal_on, branching_nb_on]
+        aniso_sub_on, mean_z_terminal_on, branching_nb_on, root_nb_on, \
+        z_coord_distrib_on]
     off = [term_dist_sub_off, diam_sub_off, branching_dist_sub_off, \
-        aniso_sub_off, mean_z_terminal_off, branching_nb_off]
-    on_off = [term_dist_sub_on_off, diam_sub_on_off, branching_dist_sub_on_off, \
-        aniso_sub_on_off, mean_z_terminal_on_off, branching_nb_on_off]
+        aniso_sub_off, mean_z_terminal_off, branching_nb_off, root_nb_off, \
+        z_coord_distrib_off]
+    on_off = [term_dist_sub_on_off, diam_sub_on_off, \
+        branching_dist_sub_on_off, aniso_sub_on_off, mean_z_terminal_on_off, \
+        branching_nb_on_off, root_nb_on_off, z_coord_distrib_on_off]
 
     return on, off, on_off
 
@@ -307,17 +373,17 @@ def split_by_type(output, print_types_nb = False):
 def regroup_data(tab):
     terminal_dist = []; disc_diam = []; branch_dist = []; aniso = []
     z_coord_distrib = []; peaks = []; z_terminal_coord_distrib = []
-    nb_branching = [];
+    nb_branching = []; nb_root = []
     for cell in tab:
-        if cell[1] is not None:
+        if cell is not None:
             terminal_dist.append(cell[0]); disc_diam.append(cell[1])
             branch_dist.append(cell[2]); aniso.append(cell[3])
             z_coord_distrib.append(cell[4]); peaks.append(cell[5])
             z_terminal_coord_distrib.append(cell[6])
-            nb_branching.append(cell[7])
+            nb_branching.append(cell[7]); nb_root.append(cell[8])
 
     return terminal_dist, disc_diam, branch_dist, aniso, z_coord_distrib, \
-        peaks, z_terminal_coord_distrib, nb_branching
+        peaks, z_terminal_coord_distrib, nb_branching, nb_root
 
 #--------------------------------------------------------------------------#
 def figure_construction(tab):
