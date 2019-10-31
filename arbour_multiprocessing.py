@@ -19,7 +19,7 @@ def main(fodler):
     # threads_nb processors will run read_file method for each file in file_queue
     output = regroup_data(Pool(threads_nb).map(read_file, enumerate(file_queue)))
 
-    analyse(output, figures = True, clustering = True)
+    analyse(output, figures = True, clustering = False)
 
     print("Execution time:", round(time.time() - start, 2), "sec")
     plt.show()
@@ -73,7 +73,7 @@ def read_file(enumerate_obj):
             prev_id = point_id
 
     if nb_dend_seg == 0 or len(distance_branching_tab) == 0:
-        warn("file only contains a cell body or no branching points")
+        print("file only contains a cell body or no branching points")
         return None
 
     return process_file([distance_terminal_tab, distance_branching_tab, coord_tab, z_terminal_tab])
@@ -484,10 +484,18 @@ def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 0
 
 #--------------------------------------------------------------------------#
 # check number of arguments
-if len(sys.argv)==2:
-    if main(sys.argv[1]):
+if len(sys.argv)==2 or len(sys.argv)==3:
+    path = sys.argv[1]
+    if len(sys.argv)==3:
+        if sys.argv[2] == "-r":
+            import correction
+            correction.main(path)
+            path = path+"rewrite/"
+        else:
+            raise SystemExit('Error: invalid option. available option: [-r]')
+    if main(path):
         print("done")
     else:
-        print("error during execution")
+        print("error during execution, is", sys.argv[1], "a valid directory?")
 else:
-    raise SystemExit('Error: need 1 arg: [swc folder]')
+    raise SystemExit('Error: need at least 1 arg: [swc folder]; option: [-r]')
