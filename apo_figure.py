@@ -42,7 +42,7 @@ def main():
     createFigure(dev_days, rgc_nb, rgc_nb_std, "Postnatal day", "Cell density", "RGC density during development")
     createFigure(dev_days, rgc_ri, rgc_ri_std, "Postnatal day", "RI", "RGC Regularity Index during development")
 
-    createFigure(dev_days, surface, surface_std, "Postnatal day", "Retinal surface", "Retinal surface during development")
+    createFigure(dev_days, surface, surface_std, "Postnatal day", "Retinal surface (mm$^2$)", "Retinal surface during development")
     createFigure(dev_days, corrected_rgc_nb, corrected_rgc_std, "Postnatal day", "Estimated cell population", "Estimated RGC population during development")
     createFigure(dev_days[:-1], death, death_std, "Postnatal day", "Cell death (%)", "RGC cumulative death during development")
 
