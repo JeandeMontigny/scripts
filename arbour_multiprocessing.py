@@ -19,9 +19,7 @@ def main(fodler):
     # threads_nb processors will run read_file method for each file in file_queue
     output = regroup_data(Pool(threads_nb).map(read_file, enumerate(file_queue)))
 
-    analyse(output, figures = False, clustering = False)
-
-    subtype_charac(output, figures = True)
+    analyse(output, figures = True, clustering = False, charac = True)
 
     print("Execution time:", round(time.time() - start, 2), "sec")
     plt.show()
@@ -42,7 +40,7 @@ def read_file(enumerate_obj):
         if m and (line[0] != "#" or line[0] != "\n"):
             line_count+=1
             point_id = int(m.group(1)); point_type = int(m.group(2));
-            point_x = float(m.group(3)); point_y = float(m.group(4)); point_z = float(m.group(5))
+            point_x = float(m.group(3)); point_y = float(m.group(4)); point_z = abs(float(m.group(5)))
             point_radius = float(m.group(6)); point_parent = int(m.group(7))
 
             # if this is the soma
@@ -89,6 +87,7 @@ def process_file(output):
     average_branch_distance = round(np.average(output[1]), 3)
     # average_branch_distance_std = round(np.std(output[1]), 3)
     aniso_score = anisometry(output[2])
+    mass_center = get_mass_center(output[2])
     z_coord_distrib = get_z_distrib(output[2], smooth = True)
     peaks = peak_detector(z_coord_distrib)
     cell_type = type_finder(peaks)
@@ -96,12 +95,15 @@ def process_file(output):
 
     return average_terminal_distance, disc_diam_95, average_branch_distance, \
         aniso_score, z_coord_distrib, peaks, ave_term_lam_depth, \
-        nb_branching, output[4]
+        nb_branching, output[4], mass_center
 
 #--------------------------------------------------------------------------#
-def analyse(output, figures = True, clustering = False, pca = False):
+def analyse(output, figures = True, clustering = False, pca = False, charac = False):
     if figures:
         figure_construction(output)
+
+    if charac:
+        subtype_charac(output, figures = False)
 
     if clustering:
         clusters = k_clustering([output[1], output[3], output[7], output[2]], \
@@ -131,48 +133,42 @@ def analyse(output, figures = True, clustering = False, pca = False):
 
 #--------------------------------------------------------------------------#
 def subtype_charac(output, figures = False):
-    on, off, on_off = split_by_type(output)
+    # on, off, on_off = split_by_type(output)
 
-    print(len(on[0]), "on;", len(off[0]), "off;", len(on_off[0]), "on-off")
-    # print("average on z terminal depth:" , np.average(on[4]))
-    # print("average off z terminal depth:" , np.average(off[4]))
-    print("ave on-off terminal depth:" , round(np.average(on_off[4]), 2))
+    # average on z terminal depth: 14.06 - z center of mass 13.78
+    # average off z terminal depth: 35.28 - z center of mass 33.37
+    # ave on-off terminal depth: 28.79 - z center of mass 31.32d
 
+    diam = []; root = []; aniso = []; branch_nb = []
     # on-off DSGC (all 4 types in 1 category)
-    dsgc_diam = []; dsgc_root = []; dsgc_branch_dist = []
-    dsgc_aniso = []; dsgc_branch_nb = []
-    for i in range(0, len(on_off[1])):
-        # if on_off[4][i] > 26.1 and on_off[1][i] is not None :
-        if on_off[1][i] is not None :
-            dsgc_diam.append(on_off[1][i])
-            dsgc_branch_dist.append(on_off[2][i])
-            dsgc_aniso.append(on_off[3][i])
-            dsgc_branch_nb.append(on_off[5][i])
-            dsgc_root.append(on_off[6][i])
-    print(len(dsgc_diam), "dsgc cells", \
-    "\nnb root:", round(np.average(dsgc_root), 2), \
-        "- std:", round(np.std(dsgc_root), 2), \
-        "; real: 4.45 - std: 1.0", \
-    "\ndiameter:", round(np.average(dsgc_diam), 2), \
-        "- std:", round(np.std(dsgc_diam), 2), \
-        "; real: 147.21 - std: 34.28", \
-    "\nbranchin nb:", round(np.average(dsgc_branch_nb), 2), \
-        "- std:", round(np.std(dsgc_branch_nb), 2), \
-        "; real: 116.07 - std: 58.32", \
-    "\nbranchin dist:", round(np.average(dsgc_branch_dist), 2), \
-        "- std:", round(np.std(dsgc_branch_dist), 2), \
-        "; real: 70.46 - std: 16.72", \
-    "\naniso:", round(np.average(dsgc_aniso), 2), \
-        "- std:", round(np.std(dsgc_aniso), 2), \
-        "; real: 0.32 - std: 0.17"
+    # for i in range(0, len(on_off[1])):
+    #     if on_off[4][i] > 26.1 and on_off[1][i] is not None :
+
+    for i in range(0, len(output[1])):
+        if output[1][i] is not None:
+        # if output[1][i] is not None \
+        #     and output[1][i] < 110  \
+        #     and output[9][i][2] > 28 and output[3][i] > 0.5:
+            diam.append(output[1][i])
+            aniso.append(output[3][i])
+            branch_nb.append(output[7][i])
+            root.append(output[8][i])
+    print(len(led_diam), "mini j cells", \
+    "\nnb root:", round(np.average(root), 2), \
+        "- std:", round(np.std(root), 2), \
+    "\ndiameter:", round(np.average(diam), 2), \
+        "- std:", round(np.std(diam), 2), \
+    "\nbranchin nb:", round(np.average(branch_nb), 2), \
+        "- std:", round(np.std(branch_nb), 2), \
+    "\naniso:", round(np.average(aniso), 2), \
+        "- std:", round(np.std(aniso), 2)
     )
 
     if figures:
-        fig_violin(dsgc_root, title = "dsgc root number distribution")
-        fig_violin(dsgc_diam, title = "dsgc diameter distribution")
-        fig_violin(dsgc_branch_nb, title = "dsgc branchin number distribution")
-        fig_violin(dsgc_branch_dist, title = "dsgc branchin distance distribution")
-        fig_violin(dsgc_aniso, title = "dsgc aniso score distribution")
+        fig_violin(root, title = "root number distribution")
+        fig_violin(diam, title = "diameter distribution")
+        fig_violin(branch_nb, title = "branchin number distribution")
+        fig_violin(aniso, title = "aniso score distribution")
 
 #--------------------------------------------------------------------------#
 def distance_xd(point1, point2):
@@ -234,6 +230,18 @@ def iso_distributor(coord):
             return 7 if x > y else 8
 
 #--------------------------------------------------------------------------#
+def get_mass_center(coord_tab):
+    x_center = []; y_center = []; z_center = []
+    for point_coord in coord_tab:
+        x_center.append(point_coord[0])
+        y_center.append(point_coord[1])
+        z_center.append(point_coord[2])
+
+    return [round(np.average(x_center), 2), \
+        round(np.average(y_center), 2), \
+        round(np.average(z_center), 2)]
+
+#--------------------------------------------------------------------------#
 def count(tab, inf_boundary, sup_boundary):
     count = 0
     for i in tab:
@@ -252,7 +260,7 @@ def count_z(multi_tab, inf_boundary, sup_boundary):
 #--------------------------------------------------------------------------#
 def get_z_distrib(coord_tab, smooth = False, figures = False):
     tab_z_count = []; interval = []
-    for i in frange(0,75, 0.5):
+    for i in frange(0, 75, 0.5):
         tab_z_count.append(count_z(coord_tab, i, i+0.5))
         interval.append(i)
     tab_z_count = np.asarray(tab_z_count)
@@ -311,17 +319,17 @@ def split_by_type(output, print_types_nb = False):
     mean_z_terminal_on = []; aniso_sub_on = []; diam_sub_on = []
     term_dist_sub_on = []; branching_dist_sub_on = []
     z_coord_distrib_on = []
-    branching_nb_on = []; root_nb_on = []
+    branching_nb_on = []; root_nb_on = []; mass_center_on = []
 
     mean_z_terminal_off = []; aniso_sub_off = []; diam_sub_off = []
     term_dist_sub_off = []; branching_dist_sub_off = []
     z_coord_distrib_off = []
-    branching_nb_off = []; root_nb_off = []
+    branching_nb_off = []; root_nb_off = []; mass_center_off = []
 
     mean_z_terminal_on_off = []; aniso_sub_on_off = []; diam_sub_on_off = []
     term_dist_sub_on_off = []; branching_dist_sub_on_off = []
     z_coord_distrib_on_off = []
-    branching_nb_on_off = []; root_nb_on_off = []
+    branching_nb_on_off = []; root_nb_on_off = []; mass_center_on_off = []
 
     for i in range(0, len(output[5])):
         type = type_finder(output[5][i])
@@ -334,6 +342,7 @@ def split_by_type(output, print_types_nb = False):
             mean_z_terminal_on.append(output[6][i])
             branching_nb_on.append(output[7][i])
             root_nb_on.append(output[8][i])
+            mass_center_on.append(output[9][i])
         if type == "off":
             term_dist_sub_off.append(output[0][i])
             diam_sub_off.append(output[1][i])
@@ -343,6 +352,7 @@ def split_by_type(output, print_types_nb = False):
             mean_z_terminal_off.append(output[6][i])
             branching_nb_off.append(output[7][i])
             root_nb_off.append(output[8][i])
+            mass_center_off.append(output[9][i])
         if type == "on-off":
             term_dist_sub_on_off.append(output[0][i])
             diam_sub_on_off.append(output[1][i])
@@ -352,6 +362,7 @@ def split_by_type(output, print_types_nb = False):
             mean_z_terminal_on_off.append(output[6][i])
             branching_nb_on_off.append(output[7][i])
             root_nb_on_off.append(output[8][i])
+            mass_center_on_off.append(output[9][i])
 
     if print_types_nb:
         print(len(term_dist_sub_on), "on cells,", len(term_dist_sub_off),\
@@ -359,13 +370,14 @@ def split_by_type(output, print_types_nb = False):
 
     on = [term_dist_sub_on, diam_sub_on, branching_dist_sub_on, \
         aniso_sub_on, mean_z_terminal_on, branching_nb_on, root_nb_on, \
-        z_coord_distrib_on]
+        z_coord_distrib_on, mass_center_on]
     off = [term_dist_sub_off, diam_sub_off, branching_dist_sub_off, \
         aniso_sub_off, mean_z_terminal_off, branching_nb_off, root_nb_off, \
-        z_coord_distrib_off]
+        z_coord_distrib_off, mass_center_off]
     on_off = [term_dist_sub_on_off, diam_sub_on_off, \
         branching_dist_sub_on_off, aniso_sub_on_off, mean_z_terminal_on_off, \
-        branching_nb_on_off, root_nb_on_off, z_coord_distrib_on_off]
+        branching_nb_on_off, root_nb_on_off, z_coord_distrib_on_off, \
+        mass_center_on_off]
 
     return on, off, on_off
 
@@ -373,7 +385,7 @@ def split_by_type(output, print_types_nb = False):
 def regroup_data(tab):
     terminal_dist = []; disc_diam = []; branch_dist = []; aniso = []
     z_coord_distrib = []; peaks = []; z_terminal_coord_distrib = []
-    nb_branching = []; nb_root = []
+    nb_branching = []; nb_root = []; mass_center = []
     for cell in tab:
         if cell is not None:
             terminal_dist.append(cell[0]); disc_diam.append(cell[1])
@@ -381,9 +393,10 @@ def regroup_data(tab):
             z_coord_distrib.append(cell[4]); peaks.append(cell[5])
             z_terminal_coord_distrib.append(cell[6])
             nb_branching.append(cell[7]); nb_root.append(cell[8])
+            mass_center.append(cell[9])
 
     return terminal_dist, disc_diam, branch_dist, aniso, z_coord_distrib, \
-        peaks, z_terminal_coord_distrib, nb_branching, nb_root
+        peaks, z_terminal_coord_distrib, nb_branching, nb_root, mass_center
 
 #--------------------------------------------------------------------------#
 def figure_construction(tab):
