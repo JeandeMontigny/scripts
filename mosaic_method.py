@@ -751,6 +751,7 @@ def voroAveCumul(weight_single_list, nb_of_repetitions, voro_list):
     area_ave_cumul = []; temps_ave_cumul = []; area_x_cumul = []; temps_x_cumul = []
     for index in range(0, len(list_areas_list)):
         n = ax1.hist(np.sort(list_areas_list[index])[:int(len(list_areas_list[index])-len(list_areas_list[index])*0.1)], bins=50, density=True)
+        # for nice figure, increase *0.1 to ~0.25
         plt.close(fig1)
 
         # cumulative density
@@ -909,4 +910,4 @@ if len(sys.argv)==2:
     else:
         print("error during execution")
 else:
-    raise SystemExit('Error: need 2 arg: [input-output folder]')
+    raise SystemExit('Error: need 1 arg: [input-output folder]')
