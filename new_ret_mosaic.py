@@ -77,6 +77,9 @@ def riFigure(type_ri_density, all = False):
     else:
         plt.plot(ave_ri, color = 'black')
         plt.ylim(1.5, 3.5)
+    plt.xlim(0)
+    plt.axvline(12, linestyle='--', color = "gray")
+    plt.axvline(67, linestyle='--', color = "gray")
     plt.xlabel("Simulation time")
     plt.ylabel("Regularity index")
 
