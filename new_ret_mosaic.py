@@ -5,7 +5,7 @@ import scipy as sp
 import matplotlib.pyplot as plt
 
 #--------------------------------------------------------------------------#
-def main(folder, process_position = True, process_ri = True):
+def main(folder, process_multiple = True, process_ri = True):
     m=re.search( r'.+/results(.+)/', folder, re.M|re.I)
     folder_nb = m.group(1)
     if process_ri:
@@ -14,7 +14,7 @@ def main(folder, process_position = True, process_ri = True):
         processPosition(folder+"cells_position/")
 
 #--------------------------------------------------------------------------#
-def processRi(file):
+def processSingle(file, multiple = False):
     type_list = []; type_ri_density = []
     current_step = 0; max_step = 0
 
@@ -44,11 +44,11 @@ def processRi(file):
             for j in range(0, max_step - len(type_ri_density[i])):
                 type_ri_density[i].insert(1,[np.nan, np.nan])
 
+    if multiple:
+        return type_ri_density
+
     riFigure(type_ri_density, all = True)
-
     processLastStep(type_ri_density)
-
-    plt.show()
 
 #--------------------------------------------------------------------------#
 def riFigure(type_ri_density, all = False):
@@ -56,10 +56,10 @@ def riFigure(type_ri_density, all = False):
     if all:
         for i in range(0, len(type_ri_density)):
             cell_type = type_ri_density[i][0]
-            if cell_type == 204 or cell_type == 108 or cell_type == 115:
-                plt.plot([couple[0] for couple in type_ri_density[i][1:]],\
-                    label="Final cell density: "\
-                    + str(type_ri_density[i][len(type_ri_density[i])-1][1]))
+            # if cell_type == 204 or cell_type == 108 or cell_type == 115:
+            plt.plot([couple[0] for couple in type_ri_density[i][1:]],\
+                label="Final cell density: "\
+                + str(type_ri_density[i][len(type_ri_density[i])-1][1]))
 
     ave_ri = []; temps = []
     # for each step
@@ -100,36 +100,87 @@ def processLastStep(type_ri_density):
     plt.ylabel("Regularity index")
 
 #--------------------------------------------------------------------------#
-def processPosition(folder):
+def processMultiple(output_folder):
+    sub_folders = [name for name in os.listdir(output_folder) if os.path.isdir(os.path.join(output_folder, name))]
+    simus = []
+    for folder in sub_folders:
+        m=re.search( r'results(.+)', folder, re.M|re.I)
+        if m:
+            folder_nb = m.group(1)
+            simus.append(processSingle(output_folder+"/"+folder+"/RI_"+folder_nb+".txt", multiple = True))
+
+    # [ [type, [ri11, ri12], [ri21, ri22] ]
+    #   [type, [ri11, ri12], [ri21, ri22] ] ]
+    all_types_all_ri = []; all_types_all_pop = []
+    list_type = []
+    for simu in simus:
+        # for each cell type in this simu
+        for i in range(0, len(simu)):
+            type = simu[i][0]
+            if not type in list_type:
+                list_type.append(type)
+                all_types_all_ri.append([type])
+                all_types_all_pop.append([type])
+                # for each step in this cell type of this simu
+                for j in range(1, len(simu[i])-1):
+                    ri = simu[i][j][0]
+                    pop = simu[i][j][1]
+                    all_types_all_ri[len(all_types_all_ri)-1].append([ri])
+                    all_types_all_pop[len(all_types_all_ri)-1].append([pop])
+
+            else:
+                for z in range(0, len(all_types_all_ri)):
+                    # get correct type in list
+                    if type == all_types_all_ri[z][0]:
+                        for j in range(1, len(simu[i])-1):
+                            ri = simu[i][j][0]
+                            pop = simu[i][j][1]
+                            all_types_all_ri[z][j].append(ri)
+                            all_types_all_pop[z][j].append(pop)
+
+    ave_ri = []; std_ri = []
+    ave_pop = []; std_pop = []
+    # for each cell type
+    for i in range (0, len(all_types_all_ri)):
+        # for each step
+        ave_ri.append([all_types_all_ri[i][0]])
+        std_ri.append([all_types_all_ri[i][0]])
+        ave_pop.append([all_types_all_pop[i][0]])
+        std_pop.append([all_types_all_pop[i][0]])
+        for j in range(1, len(all_types_all_ri[i])):
+            ave_ri[i].append(np.average(all_types_all_ri[i][j]))
+            std_ri[i].append(np.std(all_types_all_ri[i][j]))
+            ave_pop[i].append(np.average(all_types_all_pop[i][j]))
+            std_pop[i].append(np.std(all_types_all_pop[i][j]))
+
+    processLastStepMultiple(all_types_all_ri, all_types_all_pop)
+
+    plt.figure()
+    plt.errorbar([x for x in range(0, len(ave_ri[35])-1)],\
+                 ave_ri[35][1:], yerr=std_ri[35][1:],\
+                 label = str(ave_ri[35][0]))
+    plt.legend()
+    plt.show()
+
+    return
+
+#--------------------------------------------------------------------------#
+def processLastStepMultiple(all_types_all_ri, all_types_all_pop):
+    # ri vs density plot with x and y error bar
+
     return
 
 #--------------------------------------------------------------------------#
 # check arguments
-if len(sys.argv) == 2 or len(sys.argv) == 3 or len(sys.argv) == 4:
+if len(sys.argv) == 2:
 
     if len(sys.argv) and sys.argv[1].endswith(".txt"):
-        processRi(sys.argv[1])
-        sys.exit()
-
-    if len(sys.argv) == 4:
-        if sys.argv[2] == "-p" or sys.argv[2] == "-ri"\
-            and sys.argv[3] == "-p" or sys.argv[3] == "-ri":
-            main(sys.argv[1], True, True)
-            sys.exit()
-
-    if len(sys.argv) == 3:
-        if sys.argv[2] == "-p":
-            main(sys.argv[1], True, False)
-            sys.exit()
-        if sys.argv[2] == "-ri":
-            main(sys.argv[1], False, True)
-            sys.exit()
-        else:
-            raise SystemExit('Error: invalid option. options: [-p, -ri]')
-
+        processSingle(sys.argv[1])
     else:
-        raise SystemExit('Error: invalid option. options: [-p, -ri]')
-else:
-    raise SystemExit('Error: need at least 1 arg: [result folder]; option: [-p, -ri]')
+        processMultiple(sys.argv[1])
 
+else:
+    raise SystemExit('Error: need at least 1 arg: [output folder, RI file]')
+
+plt.show()
 print("done")
