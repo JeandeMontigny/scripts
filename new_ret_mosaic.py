@@ -138,37 +138,78 @@ def processMultiple(output_folder):
                             all_types_all_ri[z][j].append(ri)
                             all_types_all_pop[z][j].append(pop)
 
-    ave_ri = []; std_ri = []
+    # list of average ri per type
+    ave_ri_list = []; std_ri_list = []
     ave_pop = []; std_pop = []
     # for each cell type
     for i in range (0, len(all_types_all_ri)):
         # for each step
-        ave_ri.append([all_types_all_ri[i][0]])
-        std_ri.append([all_types_all_ri[i][0]])
+        ave_ri_list.append([all_types_all_ri[i][0]])
+        std_ri_list.append([all_types_all_ri[i][0]])
         ave_pop.append([all_types_all_pop[i][0]])
         std_pop.append([all_types_all_pop[i][0]])
         for j in range(1, len(all_types_all_ri[i])):
-            ave_ri[i].append(np.average(all_types_all_ri[i][j]))
-            std_ri[i].append(np.std(all_types_all_ri[i][j]))
+            ave_ri_list[i].append(np.average(all_types_all_ri[i][j]))
+            std_ri_list[i].append(np.std(all_types_all_ri[i][j]))
             ave_pop[i].append(np.average(all_types_all_pop[i][j]))
             std_pop[i].append(np.std(all_types_all_pop[i][j]))
 
     processLastStepMultiple(all_types_all_ri, all_types_all_pop)
 
-    plt.figure()
-    plt.errorbar([x for x in range(0, len(ave_ri[35])-1)],\
-                 ave_ri[35][1:], yerr=std_ri[35][1:],\
-                 label = str(ave_ri[35][0]))
-    plt.legend()
-    plt.show()
+    # average ri of averaged ri per type
+    ave_ri = []; temps = []
+    # for each step
+    for i in range(1, len(ave_ri_list[0])-1):
+        # for each type
+        for j in range(0, len(ave_ri_list)):
+            temps.append(ave_ri_list[j][i])
+        ave_ri.append(np.average(temps))
+        temps = []
 
-    return
+    plt.figure()
+    plt.plot(ave_ri, linewidth=4, color = 'black', label = "average ri")
+
+    plt.errorbar([x for x in range(0, len(ave_ri_list[35])-1)],\
+                 ave_ri_list[35][1:], yerr=std_ri_list[35][1:],\
+                 elinewidth = 0.5, capsize = 2,\
+                 label = "final density = 250")
+                 # label = str(ave_ri_list[35][0]))
+    plt.errorbar([x for x in range(0, len(ave_ri_list[4])-1)],\
+                 ave_ri_list[4][1:], yerr=std_ri_list[4][1:],\
+                 elinewidth = 0.5, capsize = 2,\
+                 label = "final density = 20")
+    plt.axvline(12, linestyle='--', color = "gray")
+    plt.axvline(67, linestyle='--', color = "gray")
+    plt.legend()
 
 #--------------------------------------------------------------------------#
 def processLastStepMultiple(all_types_all_ri, all_types_all_pop):
     # ri vs density plot with x and y error bar
+    ri_ave = []; ri_std = []
+    # for each type
+    for i in range (0, len(all_types_all_ri)):
+        # for each simulation
+        ri_ave.append(np.average(all_types_all_ri[i][len(all_types_all_ri[i])-1]))
+        ri_std.append(np.std(all_types_all_ri[i][len(all_types_all_ri[i])-1]))
 
-    return
+    pop_ave = []; pop_std = []
+    # for each type
+    for i in range (0, len(all_types_all_pop)):
+        # for each simulation
+        pop_ave.append(np.average(all_types_all_pop[i][len(all_types_all_pop[i])-1]))
+        pop_std.append(np.std(all_types_all_pop[i][len(all_types_all_pop[i])-1]))
+
+    print("Average final step: ri-density correlation magnitude:",\
+        round(np.corrcoef(ri_ave, pop_ave)[0][1], 2))
+
+    plt.figure()
+    plt.errorbar(pop_ave, ri_ave, xerr = pop_std, yerr = ri_std, fmt = 'o', color = 'black', ecolor = 'gray')
+    plt.plot(np.unique(pop_ave), np.poly1d(np.polyfit(pop_ave, ri_ave, 1))(np.unique(pop_ave)), color = "red")
+    plt.xlabel("Cell density")
+    plt.ylabel("Regularity index")
+    # if just death: show density (> 65) from which RI is always > 3.4
+    plt.axvline(65, linestyle='--', color = "lightgray")
+    plt.axhline(3.4, linestyle='--', color = "lightgray")
 
 #--------------------------------------------------------------------------#
 # check arguments
