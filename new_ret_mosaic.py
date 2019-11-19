@@ -71,11 +71,11 @@ def riFigure(type_ri_density, all = False):
         temps = []
 
     if all:
-        plt.plot(ave_ri, linewidth=4, color = 'black', label = "average ri")
+        plt.plot(ave_ri, linewidth=4, color = "black", label = "average ri")
         plt.ylim(1, 6.5)
         plt.legend()
     else:
-        plt.plot(ave_ri, color = 'black')
+        plt.plot(ave_ri, color = "black")
         plt.ylim(1.5, 3.5)
     plt.xlim(0)
     plt.axvline(12, linestyle='--', color = "gray")
@@ -154,8 +154,11 @@ def processMultiple(output_folder):
             ave_pop[i].append(np.average(all_types_all_pop[i][j]))
             std_pop[i].append(np.std(all_types_all_pop[i][j]))
 
+    riFigureMultiple(ave_ri_list, std_ri_list)
     processLastStepMultiple(all_types_all_ri, all_types_all_pop)
 
+#--------------------------------------------------------------------------#
+def riFigureMultiple(ave_ri_list, std_ri_list):
     # average ri of averaged ri per type
     ave_ri = []; temps = []
     # for each step
@@ -167,8 +170,8 @@ def processMultiple(output_folder):
         temps = []
 
     plt.figure()
-    plt.plot(ave_ri, linewidth=4, color = 'black', label = "average ri")
-
+    plt.plot(ave_ri, linewidth=4, color = "black", label = "average ri")
+    # NOTE: change label depending on simulation
     plt.errorbar([x for x in range(0, len(ave_ri_list[35])-1)],\
                  ave_ri_list[35][1:], yerr=std_ri_list[35][1:],\
                  elinewidth = 0.5, capsize = 2,\
@@ -179,7 +182,7 @@ def processMultiple(output_folder):
                  elinewidth = 0.5, capsize = 2,\
                  label = "final density = 20")
     plt.axvline(12, linestyle='--', color = "gray")
-    plt.axvline(67, linestyle='--', color = "gray")
+    plt.axvline(60, linestyle='--', color = "gray")
     plt.legend()
 
 #--------------------------------------------------------------------------#
@@ -203,13 +206,13 @@ def processLastStepMultiple(all_types_all_ri, all_types_all_pop):
         round(np.corrcoef(ri_ave, pop_ave)[0][1], 2))
 
     plt.figure()
-    plt.errorbar(pop_ave, ri_ave, xerr = pop_std, yerr = ri_std, fmt = 'o', color = 'black', ecolor = 'gray')
+    plt.errorbar(pop_ave, ri_ave, xerr = pop_std, yerr = ri_std, fmt = 'o', color = "black", ecolor = "gray")
     plt.plot(np.unique(pop_ave), np.poly1d(np.polyfit(pop_ave, ri_ave, 1))(np.unique(pop_ave)), color = "red")
     plt.xlabel("Cell density")
     plt.ylabel("Regularity index")
     # if just death: show density (> 65) from which RI is always > 3.4
-    plt.axvline(65, linestyle='--', color = "lightgray")
-    plt.axhline(3.4, linestyle='--', color = "lightgray")
+    # plt.axvline(65, linestyle='--', color = "lightgray")
+    # plt.axhline(3.4, linestyle='--', color = "lightgray")
 
 #--------------------------------------------------------------------------#
 # check arguments
