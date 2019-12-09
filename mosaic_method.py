@@ -8,11 +8,15 @@ import matplotlib.pyplot as plt
 
 #--------------------------------------------------------------------------#
 def main(folder):
+    create_figure_method = True
     create_mosaics = True
     mosaic_repetitions = 8
     figure_creation = True
     stat_analysis = True
     show_plots = False
+
+    if create_figure_method:
+        figure_method()
 
     if create_mosaics:
         for rand in range(1, 10):
@@ -844,7 +848,7 @@ def riAveCumul(weight_single_list, nb_of_repetitions, ri_list, short_dist_list, 
 #--------------------------------------------------------------------------#
 def significanceTable(output_folder, weight_single_list, delau, voro, dists):
 
-    columns = []; rows =["Delaunay segment length", "Voronoi areas", " Voronoi angles", "Regularity index", "Closest neighbour", "Neighbours distances"]
+    columns = []; rows =["Delaunay segment length", "Voronoi areas", " Voronoi angles", "Regularity index", "Closest neighbour", "Average neighbours distance"]
     for i in range(0, len(weight_single_list)-1):
         columns.append(str(weight_single_list[i])+" - "+str(weight_single_list[i+1]))
 
@@ -901,6 +905,85 @@ def signi_star(stat):
             return "*"
     else:
         return "."
+
+#--------------------------------------------------------------------------#
+def figure_method():
+    cells = []; rand = 50
+    for i in range(0, 4):
+        cells.append([round(rd.uniform(0, rand), 2), round(rd.uniform(0, rand), 2)])
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    tri = sp.spatial.Delaunay(cells)
+    voro = sp.spatial.Voronoi(cells)
+    # cells
+    ax.plot(tri.points[:,0], tri.points[:,1], 'o', color='black')
+    # delaunay triangulation
+    ax.triplot(tri.points[:,0], tri.points[:,1], tri.simplices, color='steelblue')
+    ax = plt.gca()
+
+    draw_circle = True
+    for point in voro.vertices:
+        if (point[0] < 60 and point[0] > -10) and (point[1] < 60 and point[1] > -10):
+            if draw_circle:
+                plt.plot(point[0], point[1], 'o', color='red')
+                circle = plt.Circle(point, dist([point, cells[0]]), color='gray', fill=False)
+                ax.add_artist(circle)
+                draw_circle = False
+            else:
+                plt.plot(point[0], point[1], 'o', color='firebrick')
+
+    # voronoi
+    from matplotlib.collections import LineCollection
+    line_colors = 'firebrick'
+    line_width = 1.0
+    line_alpha =  1.0
+
+    line_segments = []
+    for simplex in voro.ridge_vertices:
+        simplex = np.asarray(simplex)
+        if np.all(simplex >= 0):
+            line_segments.append([(x, y) for x, y in voro.vertices[simplex]])
+
+    lc = LineCollection(line_segments,
+                        colors=line_colors,
+                        linestyle='solid')
+    lc.set_alpha(line_alpha)
+    ax.add_collection(lc)
+    ptp_bound = voro.points.ptp(axis=0)
+
+    line_segments = []
+    center = voro.points.mean(axis=0)
+    for pointidx, simplex in zip(voro.ridge_points, voro.ridge_vertices):
+        simplex = np.asarray(simplex)
+        if np.any(simplex < 0):
+            i = simplex[simplex >= 0][0]  # finite end Voronoi vertex
+
+            t = voro.points[pointidx[1]] - voro.points[pointidx[0]]  # tangent
+            t /= np.linalg.norm(t)
+            n = np.array([-t[1], t[0]])  # normal
+
+            midpoint = voro.points[pointidx].mean(axis=0)
+            direction = np.sign(np.dot(midpoint - center, n)) * n
+            far_point = voro.vertices[i] + direction * ptp_bound.max()
+
+            line_segments.append([(voro.vertices[i, 0], voro.vertices[i, 1]),
+                                  (far_point[0], far_point[1])])
+
+    lc = LineCollection(line_segments,
+                        colors=line_colors,
+                        lw=line_width,
+                        linestyle='dashed')
+    lc.set_alpha(line_alpha)
+    ax.add_collection(lc)
+
+
+    ax.set_xlim(-10, 60)
+    ax.set_ylim(-10, 60)
+    ax.set_aspect('equal', 'box')
+    ax.set_xlabel("x coordinate")
+    ax.set_ylabel("y coordinate")
+    plt.show()
 
 #--------------------------------------------------------------------------#
 # check number of arguments
