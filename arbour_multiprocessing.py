@@ -5,6 +5,7 @@ import numpy as np
 from scipy.signal import find_peaks
 import scipy.cluster.vq as vq
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 #from matplotlib.mlab import PCA
 from mpl_toolkits.mplot3d import Axes3D
 import scipy.signal as sig
@@ -19,7 +20,7 @@ def main(fodler):
     # threads_nb processors will run read_file method for each file in file_queue
     output = regroup_data(Pool(threads_nb).map(read_file, enumerate(file_queue)))
 
-    analyse(output, figures = True, clustering = False, charac = True)
+    analyse(output, figures = True, clustering = False, charac = False)
 
     print("Execution time:", round(time.time() - start, 2), "sec")
     plt.show()
@@ -73,7 +74,7 @@ def read_file(enumerate_obj):
             prev_id = point_id
 
     if nb_dend_seg == 0 or len(distance_branching_tab) == 0:
-        print("file only contains a cell body or no branching points")
+        print("file contains only a cell body or no branching points")
         return None
 
     return process_file([distance_terminal_tab, distance_branching_tab, coord_tab, z_terminal_tab, nb_dend_root])
@@ -98,12 +99,27 @@ def process_file(output):
         nb_branching, output[4], mass_center
 
 #--------------------------------------------------------------------------#
-def analyse(output, figures = True, clustering = False, pca = False, charac = False):
+def analyse(output, figures = True, clustering = False, pca = False, charac = False, print_results = True):
+
+    if print_results:
+        root = output[8]; diam = output[1]
+        branch_nb = output[7]; aniso = output[3]
+        print(len(output[0]), "cells", \
+        "\nnb root:", round(np.average(root), 2), \
+            "- std:", round(np.std(root), 2), \
+        "\ndiameter:", round(np.average(diam), 2), \
+            "- std:", round(np.std(diam), 2), \
+        "\nbranchin nb:", round(np.average(branch_nb), 2), \
+            "- std:", round(np.std(branch_nb), 2), \
+        "\naniso:", round(np.average(aniso), 2), \
+            "- std:", round(np.std(aniso), 2)
+        )
+
     if figures:
         figure_construction(output)
 
     if charac:
-        subtype_charac(output, figures = False)
+        subtype_charac(output, figures = True)
 
     if clustering:
         clusters = k_clustering([output[1], output[3], output[7], output[2]], \
@@ -133,7 +149,7 @@ def analyse(output, figures = True, clustering = False, pca = False, charac = Fa
 
 #--------------------------------------------------------------------------#
 def subtype_charac(output, figures = False):
-    # on, off, on_off = split_by_type(output)
+    on, off, on_off = split_by_type(output)
 
     # average on z terminal depth: 14.06 - z center of mass 13.78
     # average off z terminal depth: 35.28 - z center of mass 33.37
@@ -153,7 +169,18 @@ def subtype_charac(output, figures = False):
             aniso.append(output[3][i])
             branch_nb.append(output[7][i])
             root.append(output[8][i])
-    print(len(led_diam), "mini j cells", \
+
+    # for i in range(0, len(on_off[1])):
+    #     if on_off[1][i] is not None:
+    #     # if output[1][i] is not None \
+    #     #     and output[1][i] < 110  \
+    #     #     and output[9][i][2] > 28 and output[3][i] > 0.5:
+    #         diam.append(on_off[1][i])
+    #         aniso.append(on_off[3][i])
+    #         branch_nb.append(on_off[5][i])
+    #         root.append(on_off[6][i])
+
+    print(len(diam), "mini-led", \
     "\nnb root:", round(np.average(root), 2), \
         "- std:", round(np.std(root), 2), \
     "\ndiameter:", round(np.average(diam), 2), \
@@ -195,7 +222,8 @@ def disc_span_95(tab):
         if len(tab_95)<0.95*tab_length:
             tab_95.append(dist)
         else:
-            return max(tab_95)
+            break
+    return max(tab_95)
 
 #--------------------------------------------------------------------------#
 def anisometry(coord_tab):
@@ -343,7 +371,7 @@ def split_by_type(output, print_types_nb = False):
             branching_nb_on.append(output[7][i])
             root_nb_on.append(output[8][i])
             mass_center_on.append(output[9][i])
-        if type == "off":
+        elif type == "off":
             term_dist_sub_off.append(output[0][i])
             diam_sub_off.append(output[1][i])
             branching_dist_sub_off.append(output[2][i])
@@ -353,7 +381,7 @@ def split_by_type(output, print_types_nb = False):
             branching_nb_off.append(output[7][i])
             root_nb_off.append(output[8][i])
             mass_center_off.append(output[9][i])
-        if type == "on-off":
+        elif type == "on-off":
             term_dist_sub_on_off.append(output[0][i])
             diam_sub_on_off.append(output[1][i])
             branching_dist_sub_on_off.append(output[2][i])
@@ -404,13 +432,59 @@ def figure_construction(tab):
     # fig_violin(tab[2], title = "branching distance distribution")
     # fig_violin(tab[3], title = "anisometry score distribution")
 
-    data = split_by_type(tab)
-    all_cells = [tab[0], tab[1], tab[2], tab[3], tab[6], tab[7]]
-    on_cells = data[0]; off_cells = data[1]; on_off_cells = data[2]
+    data = split_by_type(tab, print_types_nb = True)
+    # all_cells = [tab[0], tab[1], tab[2], tab[3], tab[6], tab[7]]
+    # on_cells = data[0]; off_cells = data[1]; on_off_cells = data[2]
+    # diameter, aniso, branching_nb
+    all_cells = [tab[1], tab[3], tab[7]]
+    on_cells = [data[0][1], data[0][3], data[0][5]]
+    off_cells = [data[1][1], data[1][3], data[1][5]]
+    on_off_cells = [data[2][1], data[2][3], data[2][5]]
+
+    # print(len(on_cells[0]), "on cells", \
+    # "\nnb root:", round(np.average(on_cells[6]), 2), \
+    #     "- std:", round(np.std(on_cells[6]), 2), \
+    # "\ndiameter:", round(np.average(on_cells[1]), 2), \
+    #     "- std:", round(np.std(on_cells[1]), 2), \
+    # "\nbranchin nb:", round(np.average(on_cells[5]), 2), \
+    #     "- std:", round(np.std(on_cells[5]), 2), \
+    # "\naniso:", round(np.average(on_cells[3]), 2), \
+    #     "- std:", round(np.std(on_cells[3]), 2)
+    # )
+
+    # print(len(off_cells[0]), "off cells", \
+    # "\nnb root:", round(np.average(off_cells[6]), 2), \
+    #     "- std:", round(np.std(off_cells[6]), 2), \
+    # "\ndiameter:", round(np.average(off_cells[1]), 2), \
+    #     "- std:", round(np.std(off_cells[1]), 2), \
+    # "\nbranchin nb:", round(np.average(off_cells[5]), 2), \
+    #     "- std:", round(np.std(off_cells[5]), 2), \
+    # "\naniso:", round(np.average(off_cells[3]), 2), \
+    #     "- std:", round(np.std(off_cells[3]), 2)
+    # )
+
+    # fig_violin(on_cells[0], title = "terminal distance")
+    # fig_violin(all_cells[1], title = "arbour diameter")
+    # # fig_violin(on_cells[2], title = "branching distance")
+    # fig_violin(all_cells[3], title = "anisometry score")
+    # # fig_violin(on_cells[4], title = "mean terminal depth")
+    # fig_violin(all_cells[5], title = "branching number")
+
+    # print("all_cells")
+    # print(all_cells)
+    #
+    # print("on_cells")
+    # print(on_cells)
+    #
+    # print("off_cells")
+    # print(off_cells)
+    #
+    # print("on_off_cells")
+    # print(on_off_cells)
+
     multiple_fig_violin([all_cells, on_cells, off_cells, on_off_cells], \
         labels = ["", "all", "", "on", "", "off", "", "on-off"], \
-        titles =  ["terminal distance", "arbour diameter", "branching distance",\
-            "anisometry score", "mean terminal depth", "branching number"])
+        titles = ["arbour diameter", "anisometry score", "branching number"])
 
 #--------------------------------------------------------------------------#
 def fig_violin(tab, x_label = "", y_label = "", title = ""):
@@ -434,11 +508,58 @@ def fig_violin(tab, x_label = "", y_label = "", title = ""):
 
 #--------------------------------------------------------------------------#
 def multiple_fig_violin(tab, labels, titles):
-    all_cells = tab[0]; on_cells = tab[1]; off_cells = tab[2]; on_off_cells = tab[3]
-    for i in range(0, len(on_cells)):
+    if len(tab[0]) != len(tab[1]) or len(tab[1]) != len(tab[2]):
+        print("error in multiple_fig_violin: lists should be of same size")
+        return
+
+    import dendrites_real_data
+    real_all_cells, real_on_cells, real_off_cells, real_on_off_cells =\
+     dendrites_real_data.get_real_data()
+    real_cells =\
+     [real_all_cells, real_on_cells, real_off_cells, real_on_off_cells]
+
+    colours_labels = []; initialise_label = True
+    def add_label(violin, label):
+        color = violin["bodies"][0].get_facecolor().flatten()
+        colours_labels.append((mpatches.Patch(color=color), label))
+
+    for i in range(0, len(tab[0])):
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        violin_parts = ax.violinplot([cell_type[i] for cell_type in tab], showmeans = True)
+        # real data
+        violin_parts = ax.violinplot([cell_type[i] for cell_type in real_cells], showmeans = True, showextrema = False)
+        # keep just left half
+        for b in violin_parts['bodies']:
+            m = np.mean(b.get_paths()[0].vertices[:, 0])
+            b.get_paths()[0].vertices[:, 0] =\
+             np.clip(b.get_paths()[0].vertices[:, 0], -np.inf, m)
+            # b.set_color('royalblue')
+        b = violin_parts['cmeans']
+        for j in range(0, len(b.get_paths())):
+            m = np.mean(b.get_paths()[j].vertices[:, 0])
+            b.get_paths()[j].vertices[:, 0] =\
+             np.clip(b.get_paths()[j].vertices[:, 0], -np.inf, m)
+            b.set_color('blue')
+        if initialise_label:
+            add_label(violin_parts, "In-vitro")
+
+        # these cells
+        violin_parts = ax.violinplot([cell_type[i] for cell_type in tab], showmeans = True, showextrema = False)
+        # keep just right half
+        for b in violin_parts['bodies']:
+            m = np.mean(b.get_paths()[0].vertices[:, 0])
+            b.get_paths()[0].vertices[:, 0] = np.clip(b.get_paths()[0].vertices[:, 0], m, np.inf)
+            # b.set_color('orange')
+        b = violin_parts['cmeans']
+        for j in range(0, len(b.get_paths())):
+            m = np.mean(b.get_paths()[j].vertices[:, 0])
+            b.get_paths()[j].vertices[:, 0] = np.clip(b.get_paths()[j].vertices[:, 0], m, np.inf)
+            b.set_color('darkorange')
+        if initialise_label:
+            add_label(violin_parts, "In-silico")
+        initialise_label = False
+
+        plt.legend(*zip(*colours_labels))
         ax.set_xticklabels(labels)
         ax.set_title(titles[i])
 
