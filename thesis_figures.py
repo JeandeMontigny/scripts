@@ -2,6 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import scipy.stats as stat
 from scipy.optimize import curve_fit
 import thesis_figures_data
 
@@ -370,11 +371,13 @@ def main():
         # keep just right half
         for b in violin_parts['bodies']:
             m = np.mean(b.get_paths()[0].vertices[:, 0])
-            b.get_paths()[0].vertices[:, 0] = np.clip(b.get_paths()[0].vertices[:, 0], m, np.inf)
+            b.get_paths()[0].vertices[:, 0] =\
+             np.clip(b.get_paths()[0].vertices[:, 0], m, np.inf)
         b = violin_parts['cmeans']
         for j in range(0, len(b.get_paths())):
             m = np.mean(b.get_paths()[j].vertices[:, 0])
-            b.get_paths()[j].vertices[:, 0] = np.clip(b.get_paths()[j].vertices[:, 0], m, np.inf)
+            b.get_paths()[j].vertices[:, 0] =\
+             np.clip(b.get_paths()[j].vertices[:, 0], m, np.inf)
             b.set_color('darkorange')
         if initialise_label:
             add_label(violin_parts, "In-silico")
@@ -384,6 +387,15 @@ def main():
             plt.legend(*zip(*colours_labels), bbox_to_anchor=(0.87, 1))
         ax.set_xticklabels(violin_labels)
         ax.set_ylabel(plot_labels[i])
+
+        if i == 1:
+            ax.text(2, 0.94, "_______", horizontalalignment='center')
+            ax.text(2, 0.93, "***", horizontalalignment='center')
+            ax.text(3, 0.94, "_______", horizontalalignment='center')
+            ax.text(3, 0.93, "***", horizontalalignment='center')
+        if i == 2:
+            ax.text(3, 400, "_______", horizontalalignment='center')
+            ax.text(3, 396, "***", horizontalalignment='center')
 
         plt.tight_layout()
 
