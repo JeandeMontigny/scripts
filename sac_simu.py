@@ -26,6 +26,8 @@ def main(distance_file):
     ri_inl = get_ri(cells_inl)
     ri_combined = get_ri(cells_gcl + cells_inl)
     print("ri gcl:", ri_gcl, "; ri inl:", ri_inl, "; ri combined:", ri_combined)
+    exclusion_factor = get_exclusion_fact(cells_gcl, cells_inl)
+    print("gcl-inl exclusion factor:", exclusion_factor, "(1 = complete exclusion)")
 
     figure(cells_gcl_x, cells_gcl_y, cells_inl_x, cells_inl_y)
 
@@ -56,6 +58,18 @@ def get_distance(cell_a, cell_b):
     return round(np.sqrt( \
         np.square(cell_a[0] - cell_b[0]) + \
         np.square(cell_a[1] - cell_b[1]) ), 2)
+
+#--------------------------------------------------------------------------#
+def get_exclusion_fact(pop_a, pop_b):
+    redondancy = 0
+    r = 16
+    for cell_a in pop_a:
+        for cell_b in pop_b:
+            if (np.square(cell_a[0] - cell_b[0]) + np.square(cell_a[1] - cell_b[1]) <= np.square(r)):
+                redondancy+=1
+                # exit loop to avoid multiple positif for one cell
+                break
+    return round(1 - redondancy/len(pop_a+pop_b)*2, 2)
 
 #--------------------------------------------------------------------------#
 def figure(cells_gcl_x, cells_gcl_y, cells_inl_x, cells_inl_y):
