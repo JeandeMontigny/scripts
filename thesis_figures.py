@@ -9,7 +9,7 @@ import thesis_figures_data
 #--------------------------------------------------------------------------#
 def main():
 
-    dev_days, rgc_nb, rgc_nb_std, rgc_ri, rgc_ri_std, surface, surface_std, corrected_rgc_nb, corrected_rgc_std, death, death_std, sac_gcl_nb, sac_gcl_nb_std, sac_gcl_ri, sac_gcl_ri_std, sac_inl_nb, sac_inl_nb_std, sac_inl_ri, sac_inl_ri_std, sac_exclusion_factor, sac_exclusion_factor_std, real_death, real_death_std, pop_real, pop_real_std, pop_simu, pop_simu_std, high_dens_death, high_dens_death_std, high_dens_death_rate, low_dens_death, low_dens_death_std, low_dens_death_rate, randon_weight, delaunay_x, delaunay_cumuls, ri_randon_weight, ri_randon_weight_std, mig_denstiy, mig_denstiy_std, mig_dist, mig_dist_std, output_fate_ave, output_fate_250, output_fate_250_std, output_fate_20, output_fate_20_std, output_death_ave, output_death_250, output_death_250_std, output_death_20, output_death_20_std, output_all_ave, output_all_250, output_all_250_std, output_all_20, output_all_20_std, fate_pop_ave, fate_ri_ave, fate_pop_std, fate_ri_std, death_pop_ave, death_ri_ave, death_pop_std, death_ri_std, all_pop_ave, all_ri_ave, all_pop_std, all_ri_std, dendrites_on_off_diam, dendrites_on_off_aniso, dendrites_on_off_branch, dendrites_on_diam, dendrites_on_aniso, dendrites_on_branch, dendrites_off_diam, dendrites_off_aniso, dendrites_off_branch, real_dendrites_all_cells, real_dendrites_on_off_cells, real_dendrites_on_cells, real_dendrites_off_cells, centre_peri_p2, centre_peri_p3, centre_peri_p4, centre_peri_p5, centre_peri_p6, centre_peri_p7, centre_peri_p8, centre_peri_p9, wave_origin_p2, wave_origin_p3, wave_origin_p4, wave_origin_p5, wave_origin_p6_7, wave_origin_p8_9, wave_origin_p10_13 = thesis_figures_data.get_data()
+    dev_days, rgc_nb, rgc_nb_std, rgc_ri, rgc_ri_std, surface, surface_std, corrected_rgc_nb, corrected_rgc_std, death, death_std, sac_gcl_nb, sac_gcl_nb_std, sac_gcl_ri, sac_gcl_ri_std, sac_inl_nb, sac_inl_nb_std, sac_inl_ri, sac_inl_ri_std, sac_exclusion_factor, sac_exclusion_factor_std, real_death, real_death_std, pop_real, pop_real_std, pop_simu, pop_simu_std, high_dens_death, high_dens_death_std, high_dens_death_rate, low_dens_death, low_dens_death_std, low_dens_death_rate, randon_weight, delaunay_x, delaunay_cumuls, ri_randon_weight, ri_randon_weight_std, mig_denstiy, mig_denstiy_std, mig_dist, mig_dist_std, output_fate_ave, output_fate_250, output_fate_250_std, output_fate_20, output_fate_20_std, output_death_ave, output_death_250, output_death_250_std, output_death_20, output_death_20_std, output_all_ave, output_all_250, output_all_250_std, output_all_20, output_all_20_std, fate_pop_ave, fate_ri_ave, fate_pop_std, fate_ri_std, death_pop_ave, death_ri_ave, death_pop_std, death_ri_std, all_pop_ave, all_ri_ave, all_pop_std, all_ri_std, dendrites_on_off_diam, dendrites_on_off_aniso, dendrites_on_off_branch, dendrites_on_diam, dendrites_on_aniso, dendrites_on_branch, dendrites_off_diam, dendrites_off_aniso, dendrites_off_branch, real_dendrites_all_cells, real_dendrites_on_off_cells, real_dendrites_on_cells, real_dendrites_off_cells, dendrites_3_on_off_diam, dendrites_3_on_off_aniso, dendrites_3_on_off_branch, dendrites_3_on_diam, dendrites_3_on_aniso, dendrites_3_on_branch, dendrites_3_off_diam, dendrites_3_off_aniso, dendrites_3_off_branch, ankur_model_x_first, ankur_model_y_first, ankur_model_c_first, ankur_model_x_final, ankur_model_y_final, ankur_model_c_final, centre_peri_p2, centre_peri_p3, centre_peri_p4, centre_peri_p5, centre_peri_p6, centre_peri_p7, centre_peri_p8, centre_peri_p9, wave_origin_p2, wave_origin_p3, wave_origin_p4, wave_origin_p5, wave_origin_p6_7, wave_origin_p8_9, wave_origin_p10_13 = thesis_figures_data.get_data()
 
     # -------- front sizes -------- #
     ticks_size = 11; label_size = 12
@@ -101,7 +101,7 @@ def main():
     plt.errorbar(dev_days[2:], sac_inl_nb, sac_inl_nb_std, label = "INL population")
     plt.xlim(3.5, 10.5)
     plt.xlabel("Postnatal day", size = label_size)
-    plt.ylabel("Cumulative apoptosis (%)", size = label_size)
+    plt.ylabel("Cell density (cells/mm$^2$)", size = label_size)
     plt.xticks(size = ticks_size)
     plt.yticks(size = ticks_size)
     plt.legend()
@@ -114,7 +114,7 @@ def main():
     plt.errorbar(dev_days[2:], sac_inl_ri, sac_inl_ri_std, label = "INL population")
     plt.xlim(3.5, 10.5)
     plt.xlabel("Postnatal day", size = label_size)
-    plt.ylabel("Cumulative apoptosis (%)", size = label_size)
+    plt.ylabel("Regularity index", size = label_size)
     plt.xticks(size = ticks_size)
     plt.yticks(size = ticks_size)
     plt.legend()
@@ -135,13 +135,59 @@ def main():
 
     plt.tight_layout()
 
+    # -------- PAPER -------- #
+    # plt.figure(figsize=(5.12, 8.5))
+    # plot = plt.subplot(3, 1, 1)
+    # plot.spines['right'].set_visible(False)
+    # plot.spines['top'].set_visible(False)
+    # plot.text(2.9, 1.66e3, "A", size = 16)
+    # plt.errorbar(dev_days[2:], sac_gcl_nb, sac_gcl_nb_std, label = "GCL population")
+    # plt.errorbar(dev_days[2:], sac_inl_nb, sac_inl_nb_std, label = "INL population")
+    # plt.xlim(3.5, 10.5)
+    # plt.ylim(600, 1601)
+    # plt.xlabel("Postnatal day", size = label_size)
+    # plt.ylabel("Cell density (cells/mm$^2$)", size = label_size)
+    # plt.xticks(size = ticks_size)
+    # plt.yticks(size = ticks_size)
+    # plt.legend()
+    #
+    # plot = plt.subplot(3, 1, 2)
+    # plot.spines['right'].set_visible(False)
+    # plot.spines['top'].set_visible(False)
+    # plot.text(2.9, 6.4, "B", size = 16)
+    # plt.errorbar(dev_days[2:], sac_gcl_ri, sac_gcl_ri_std, label = "GCL population")
+    # plt.errorbar(dev_days[2:], sac_inl_ri, sac_inl_ri_std, label = "INL population")
+    # plt.xlim(3.5, 10.5)
+    # plt.ylim(0, 6.01)
+    # plt.xlabel("Postnatal day", size = label_size)
+    # plt.ylabel("Regularity index", size = label_size)
+    # plt.xticks(size = ticks_size)
+    # plt.yticks(size = ticks_size)
+    # plt.legend()
+    #
+    # plot = plt.subplot(3, 1, 3)
+    # plot.spines['right'].set_visible(False)
+    # plot.spines['top'].set_visible(False)
+    # plot.text(2.9, 1.04, "C", size = 16)
+    # plt.errorbar(dev_days[2:], sac_exclusion_factor, sac_exclusion_factor_std, c='dimgrey')
+    # plt.xlim(3.5, 10.5)
+    # plt.ylim(0.5, 1)
+    # plt.xlabel("Postnatal day", size = label_size)
+    # plt.ylabel("Exclusion factor", size = label_size)
+    # plt.xticks(size = ticks_size)
+    # plt.yticks(size = ticks_size)
+    #
+    # plt.tight_layout()
+
+    # -------- END PAPER -------- #
+
     # -------- Figure 6 -------- #
     plt.figure(figsize=(5.12, 5.12))
     plot = plt.subplot(1, 1, 1)
     plot.spines['right'].set_visible(False)
     plot.spines['top'].set_visible(False)
     plt.errorbar(dev_days, rgc_ri, rgc_ri_std)
-    plt.xlim(2.5, 10.5)
+    plt.xlim(1.5, 10.5)
     plt.xlabel("Postnatal day", size = label_size)
     plt.ylabel("Regularity index", size = label_size)
     plt.xticks(size = ticks_size)
@@ -322,7 +368,99 @@ def main():
 
     plt.tight_layout()
 
-    # -------- Figure 12 -------- #
+    # -------- Figure 13 -------- #
+    real_cells = [real_dendrites_all_cells, real_dendrites_on_cells, real_dendrites_off_cells, real_dendrites_on_off_cells]
+
+    dendrites_all = [[dendrites_3_on_diam + dendrites_3_off_diam + dendrites_3_on_off_diam], [dendrites_3_on_aniso + dendrites_3_off_aniso + dendrites_3_on_off_aniso], [dendrites_3_on_branch + dendrites_3_off_branch + dendrites_3_on_off_branch]]
+    dendrites_on = [dendrites_3_on_diam, dendrites_3_on_aniso, dendrites_3_on_branch]
+    dendrites_off = [dendrites_3_off_diam, dendrites_3_off_aniso, dendrites_3_off_branch]
+    dendrites_on_off = [dendrites_3_on_off_diam, dendrites_3_on_off_aniso, dendrites_3_on_off_branch]
+
+    tab = [dendrites_all, dendrites_on, dendrites_off, dendrites_on_off]
+
+    colours_labels = []; initialise_label = True
+    violin_labels = ["", "all", "", "on", "", "off", "", "on-off"]
+    plot_labels = ["Arbour diameter (µm)", "Anisometry score", "Branching number"]
+    def add_label(violin, label):
+        color = violin["bodies"][0].get_facecolor().flatten()
+        colours_labels.append((mpatches.Patch(color=color), label))
+
+    plt.figure(figsize=(6.5, 10))
+    for i in range(0, len(tab[0])):
+        ax = plt.subplot(3, 1, i+1)
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        if i == 0:
+            ax.text(0.4, 275, "A", size = 16)
+        if i == 1:
+            ax.text(0.4, 0.95, "B", size = 16)
+        if i == 2:
+            ax.text(0.4, 435, "C", size = 16)
+        # real data
+        violin_parts = ax.violinplot([cell_type[i] for cell_type in real_cells], showmeans = True, showextrema = False)
+        # keep just left half
+        for b in violin_parts['bodies']:
+            m = np.mean(b.get_paths()[0].vertices[:, 0])
+            b.get_paths()[0].vertices[:, 0] =\
+             np.clip(b.get_paths()[0].vertices[:, 0], -np.inf, m)
+        b = violin_parts['cmeans']
+        for j in range(0, len(b.get_paths())):
+            m = np.mean(b.get_paths()[j].vertices[:, 0])
+            b.get_paths()[j].vertices[:, 0] =\
+             np.clip(b.get_paths()[j].vertices[:, 0], -np.inf, m)
+            b.set_color('blue')
+        if initialise_label:
+            add_label(violin_parts, "In-vitro")
+
+        # modelled cells
+        violin_parts = ax.violinplot([cell_type[i] for cell_type in tab], showmeans = True, showextrema = False)
+        # keep just right half
+        for b in violin_parts['bodies']:
+            m = np.mean(b.get_paths()[0].vertices[:, 0])
+            b.get_paths()[0].vertices[:, 0] =\
+             np.clip(b.get_paths()[0].vertices[:, 0], m, np.inf)
+        b = violin_parts['cmeans']
+        for j in range(0, len(b.get_paths())):
+            m = np.mean(b.get_paths()[j].vertices[:, 0])
+            b.get_paths()[j].vertices[:, 0] =\
+             np.clip(b.get_paths()[j].vertices[:, 0], m, np.inf)
+            b.set_color('darkorange')
+        if initialise_label:
+            add_label(violin_parts, "In-silico")
+        initialise_label = False
+
+        if i==0:
+            plt.legend(*zip(*colours_labels), bbox_to_anchor=(0.87, 0.97))
+        ax.set_xticklabels(violin_labels)
+        ax.set_ylabel(plot_labels[i])
+
+        if i == 0:
+            ax.text(1, 271, "_______", horizontalalignment='center')
+            ax.text(1, 270, "**", horizontalalignment='center')
+            ax.text(2, 271, "_______", horizontalalignment='center')
+            ax.text(2, 270, "**", horizontalalignment='center')
+            ax.text(3, 271, "_______", horizontalalignment='center')
+            ax.text(3, 270, "*", horizontalalignment='center')
+            ax.text(4, 271, "_______", horizontalalignment='center')
+            ax.text(4, 270, "*", horizontalalignment='center')
+        if i == 1:
+            ax.text(1, 0.89, "_______", horizontalalignment='center')
+            ax.text(1, 0.88, "***", horizontalalignment='center')
+            ax.text(2, 0.89, "_______", horizontalalignment='center')
+            ax.text(2, 0.88, "***", horizontalalignment='center')
+            ax.text(3, 0.89, "_______", horizontalalignment='center')
+            ax.text(3, 0.88, "*", horizontalalignment='center')
+            ax.text(4, 0.89, "_______", horizontalalignment='center')
+            ax.text(4, 0.88, "*", horizontalalignment='center')
+        if i == 2:
+            ax.text(1, 414, "_______", horizontalalignment='center')
+            ax.text(1, 410, "*", horizontalalignment='center')
+            ax.text(3, 414, "_______", horizontalalignment='center')
+            ax.text(3, 410, "***", horizontalalignment='center')
+
+        plt.tight_layout()
+
+    # -------- Figure 14 -------- #
     real_cells = [real_dendrites_all_cells, real_dendrites_on_cells, real_dendrites_off_cells, real_dendrites_on_off_cells]
 
     dendrites_all = [[dendrites_on_diam + dendrites_off_diam + dendrites_on_off_diam], [dendrites_on_aniso + dendrites_off_aniso + dendrites_on_off_aniso], [dendrites_on_branch + dendrites_off_branch + dendrites_on_off_branch]]
@@ -389,15 +527,49 @@ def main():
         ax.set_ylabel(plot_labels[i])
 
         if i == 1:
+            ax.text(1, 0.94, "_______", horizontalalignment='center')
+            ax.text(1, 0.93, "***", horizontalalignment='center')
             ax.text(2, 0.94, "_______", horizontalalignment='center')
             ax.text(2, 0.93, "***", horizontalalignment='center')
             ax.text(3, 0.94, "_______", horizontalalignment='center')
             ax.text(3, 0.93, "***", horizontalalignment='center')
         if i == 2:
-            ax.text(3, 400, "_______", horizontalalignment='center')
-            ax.text(3, 396, "***", horizontalalignment='center')
+            ax.text(1, 414, "_______", horizontalalignment='center')
+            ax.text(1, 410, "***", horizontalalignment='center')
+            ax.text(3, 414, "_______", horizontalalignment='center')
+            ax.text(3, 410, "***", horizontalalignment='center')
 
         plt.tight_layout()
+
+    # -------- Figure Ankur -------- #
+    plt.figure(figsize=(10, 5.12))
+    plot = plt.subplot(1, 2, 1)
+    plot.spines['right'].set_visible(False)
+    plot.spines['top'].set_visible(False)
+    plot.text(25, 1200, "A", size = 16)
+    plt.scatter(ankur_model_x_first, ankur_model_y_first,\
+     color=ankur_model_c_first, s=5)
+    plt.xlabel("x position", size = label_size)
+    plt.ylabel("y position", size = label_size)
+    plt.xticks([])
+    plt.yticks([])
+    plt.xlim(100, 1200)
+    plt.ylim(100, 1200)
+
+    plot = plt.subplot(1, 2, 2)
+    plot.spines['right'].set_visible(False)
+    plot.spines['top'].set_visible(False)
+    plot.text(25, 1200, "B", size = 16)
+    plt.scatter(ankur_model_x_final, ankur_model_y_final,\
+     color=ankur_model_c_final, s=5)
+    plt.xlabel("x position", size = label_size)
+    plt.ylabel("y position", size = label_size) # (µm)
+    plt.xticks([])
+    plt.yticks([])
+    plt.xlim(100, 1200)
+    plt.ylim(100, 1200)
+
+    plt.tight_layout()
 
     # -------- Clusters Figure 1 -------- #
     fig, ax1 = plt.subplots()
