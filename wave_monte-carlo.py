@@ -23,9 +23,9 @@ def main():
             point_peri += 1
 
         #Cartesian coordinates
-        # x = r * np.cos(a)
-        # y = r * np.sin(a)
-        # plt.scatter(x, y, c='green')
+        x = r * np.cos(a)
+        y = r * np.sin(a)
+        plt.scatter(x, y, c='green')
 
     ratio = round(point_peri/point_center, 2)
     # print("ratio center/peri:", ratio)
