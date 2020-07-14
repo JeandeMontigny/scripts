@@ -53,7 +53,7 @@ def main(output = False, figure = False):
         plt.ylim(-5, 5)
         plt.show()
 
-    return ratio, normalised_ratio
+    return ratio, np.log(normalised_ratio)
 
 #--------------------------------------------------------------------------#
 list_ratio = []
@@ -65,4 +65,4 @@ for i in range(0, 10):
     list_normalised_ratio.append(results[1])
 
 print("average ratio:", round(np.average(list_ratio), 2), "with std:", round(np.std(list_ratio), 2))
-print("average normalised ratio:", round(np.average(list_normalised_ratio), 2), "with std:", round(np.std(list_normalised_ratio), 2))
+print("average normalised log ratio:", round(np.average(list_normalised_ratio), 2), "with std:", round(np.std(list_normalised_ratio), 2))
