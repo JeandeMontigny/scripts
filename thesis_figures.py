@@ -9,7 +9,7 @@ import thesis_figures_data
 #--------------------------------------------------------------------------#
 def main():
 
-    dev_days, rgc_nb, rgc_nb_std, rgc_ri, rgc_ri_std, surface, surface_std, corrected_rgc_nb, corrected_rgc_std, death, death_std, sac_gcl_nb, sac_gcl_nb_std, sac_gcl_ri, sac_gcl_ri_std, sac_inl_nb, sac_inl_nb_std, sac_inl_ri, sac_inl_ri_std, sac_exclusion_factor, sac_exclusion_factor_std, real_death, real_death_std, pop_real, pop_real_std, pop_simu, pop_simu_std, high_dens_death, high_dens_death_std, high_dens_death_rate, low_dens_death, low_dens_death_std, low_dens_death_rate, randon_weight, delaunay_x, delaunay_cumuls, ri_randon_weight, ri_randon_weight_std, mig_denstiy, mig_denstiy_std, mig_dist, mig_dist_std, output_fate_ave, output_fate_250, output_fate_250_std, output_fate_20, output_fate_20_std, output_death_ave, output_death_250, output_death_250_std, output_death_20, output_death_20_std, output_all_ave, output_all_250, output_all_250_std, output_all_20, output_all_20_std, fate_pop_ave, fate_ri_ave, fate_pop_std, fate_ri_std, death_pop_ave, death_ri_ave, death_pop_std, death_ri_std, all_pop_ave, all_ri_ave, all_pop_std, all_ri_std, dendrites_on_off_diam, dendrites_on_off_aniso, dendrites_on_off_branch, dendrites_on_diam, dendrites_on_aniso, dendrites_on_branch, dendrites_off_diam, dendrites_off_aniso, dendrites_off_branch, real_dendrites_all_cells, real_dendrites_on_off_cells, real_dendrites_on_cells, real_dendrites_off_cells, dendrites_3_on_off_diam, dendrites_3_on_off_aniso, dendrites_3_on_off_branch, dendrites_3_on_diam, dendrites_3_on_aniso, dendrites_3_on_branch, dendrites_3_off_diam, dendrites_3_off_aniso, dendrites_3_off_branch, ankur_model_x_first, ankur_model_y_first, ankur_model_c_first, ankur_model_x_final, ankur_model_y_final, ankur_model_c_final, centre_peri_p2, centre_peri_p3, centre_peri_p4, centre_peri_p5, centre_peri_p6, centre_peri_p7, centre_peri_p8, centre_peri_p9, wave_origin_p2, wave_origin_p3, wave_origin_p4, wave_origin_p5, wave_origin_p6_7, wave_origin_p8_9, wave_origin_p10_13, wave_origin_p2_norm, wave_origin_p3_norm, wave_origin_p4_norm, wave_origin_p5_norm, wave_origin_p6_7_norm, wave_origin_p8_9_norm, wave_origin_p10_13_norm = thesis_figures_data.get_data()
+    dev_days, rgc_nb, rgc_nb_std, rgc_ri, rgc_ri_std, surface, surface_std, corrected_rgc_nb, corrected_rgc_std, death, death_std, sac_gcl_nb, sac_gcl_nb_std, sac_gcl_ri, sac_gcl_ri_std, sac_inl_nb, sac_inl_nb_std, sac_inl_ri, sac_inl_ri_std, sac_exclusion_factor, sac_exclusion_factor_std, real_death, real_death_std, pop_real, pop_real_std, pop_simu, pop_simu_std, high_dens_death, high_dens_death_std, high_dens_death_rate, low_dens_death, low_dens_death_std, low_dens_death_rate, randon_weight, delaunay_x, delaunay_cumuls, ri_randon_weight, ri_randon_weight_std, mig_denstiy, mig_denstiy_std, mig_dist, mig_dist_std, output_fate_ave, output_fate_250, output_fate_250_std, output_fate_20, output_fate_20_std, output_death_ave, output_death_250, output_death_250_std, output_death_20, output_death_20_std, output_all_ave, output_all_250, output_all_250_std, output_all_20, output_all_20_std, fate_pop_ave, fate_ri_ave, fate_pop_std, fate_ri_std, death_pop_ave, death_ri_ave, death_pop_std, death_ri_std, all_pop_ave, all_ri_ave, all_pop_std, all_ri_std, dendrites_on_off_diam, dendrites_on_off_aniso, dendrites_on_off_branch, dendrites_on_diam, dendrites_on_aniso, dendrites_on_branch, dendrites_off_diam, dendrites_off_aniso, dendrites_off_branch, real_dendrites_all_cells, real_dendrites_on_off_cells, real_dendrites_on_cells, real_dendrites_off_cells, dendrites_3_on_off_diam, dendrites_3_on_off_aniso, dendrites_3_on_off_branch, dendrites_3_on_diam, dendrites_3_on_aniso, dendrites_3_on_branch, dendrites_3_off_diam, dendrites_3_off_aniso, dendrites_3_off_branch, ankur_model_x_first, ankur_model_y_first, ankur_model_c_first, ankur_model_x_final, ankur_model_y_final, ankur_model_c_final, centre_peri_p2, centre_peri_p3, centre_peri_p4, centre_peri_p5, centre_peri_p6, centre_peri_p7, centre_peri_p8, centre_peri_p9, wave_origin_p2_norm_log, wave_origin_p3_norm_log, wave_origin_p4_norm_log, wave_origin_p5_norm_log, wave_origin_p6_7_norm_log, wave_origin_p8_9_norm_log, wave_origin_p10_13_norm_log = thesis_figures_data.get_data()
 
     # -------- front sizes -------- #
     ticks_size = 11; label_size = 12
@@ -591,23 +591,16 @@ def main():
 
     plt.tight_layout()
 
-    # -------- Clusters Figure 2 -------- #
+    # -------- Clusters Figure 2 - normalised - log -------- #
     fig, ax = plt.subplots()
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.set_xlabel("Postnatal day", size = label_size)
-    ax.set_ylabel("Wave origin periphery/centre ratio", size = label_size)
-    ax.boxplot([wave_origin_p2, wave_origin_p3, wave_origin_p4, wave_origin_p5, wave_origin_p6_7, wave_origin_p8_9, wave_origin_p10_13], labels=["2", "3", "4", "5", "6-7", "8-9", "10-13"], medianprops=dict(color='black'))
-
-    plt.tight_layout()
-
-    # -------- Clusters Figure 2 - normalised -------- #
-    fig, ax = plt.subplots()
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.set_xlabel("Postnatal day", size = label_size)
-    ax.set_ylabel("Normalised wave origin periphery/centre ratio", size = label_size)
-    ax.boxplot([wave_origin_p2_norm, wave_origin_p3_norm, wave_origin_p4_norm, wave_origin_p5_norm, wave_origin_p6_7_norm, wave_origin_p8_9_norm, wave_origin_p10_13_norm], labels=["2", "3", "4", "5", "6-7", "8-9", "10-13"], medianprops=dict(color='black'))
+    ax.set_ylabel("Normalised wave origin log ratio", size = label_size)
+    ax.boxplot([wave_origin_p2_norm_log, wave_origin_p3_norm_log, wave_origin_p4_norm_log, wave_origin_p5_norm_log, wave_origin_p6_7_norm_log, wave_origin_p8_9_norm_log, wave_origin_p10_13_norm_log], labels=["2", "3", "4", "5", "6-7", "8-9", "10-13"], medianprops=dict(color='black'))
+    monte_carlo = [[-0.04, 0.22], [-0.02, 0.23], [0.0, 0.20], [-0.03, 0.22], [0.02, 0.21], [-0.02, 0.18], [0.01, 0.21]]
+    for i in range(0, len(monte_carlo)):
+        plt.errorbar(i+1, monte_carlo[i][0], monte_carlo[i][1], c='red', marker='.')
 
     plt.tight_layout()
 
